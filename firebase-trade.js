@@ -3,7 +3,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getAuth, onAuthStateChanged, signOut, signInAnonymously, signInWithEmailAndPassword,
   createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, GithubAuthProvider } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, getDoc, runTransaction, collection, query, where, onSnapshot,
-  addDoc, updateDoc, serverTimestamp, getDocs, documentId, limit } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  addDoc, updateDoc, serverTimestamp, getDocs, documentId, limit, deleteField } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const app = initializeApp({
   apiKey: "AIzaSyDVkJX-VibTIhMp_WoTqQ6LzNOy7G5OwmY",
@@ -223,10 +223,10 @@ $("side-buttons").appendChild(trBtn);
 const trStyle = document.createElement("style");
 trStyle.textContent = `@keyframes trpop{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}
 .tr-hint{color:#aaa;text-align:center;padding:36px 0;font-size:14px}
-.tr-row{display:flex;align-items:center;gap:12px;padding:10px;background:rgba(255,255,255,.08);border-radius:14px;margin-bottom:8px}
-.tr-av{width:44px;height:44px;border-radius:50%;object-fit:cover;background:#222;flex:none}
+.tr-row{display:flex;align-items:center;gap:12px;padding:6px 0;margin-bottom:6px}
+.tr-av{width:36px;height:36px;border-radius:4px;object-fit:cover;background:#222;flex:none}
 .tr-mid{flex:1;min-width:0;font-size:14px}.tr-name{color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.tr-send{border:0;border-radius:10px;padding:9px 12px;background:#27ae60;color:#fff;cursor:pointer;font-size:12px;flex:none}
+.tr-send{border:0;border-radius:2px;padding:9px 14px;background:#27ae60;color:#fff;cursor:pointer;font-size:14px;flex:none}
 .tr-send:disabled{background:#7f8c8d;cursor:not-allowed}
 #tr-toasts{position:fixed;right:20px;bottom:140px;z-index:1500;display:flex;flex-direction:column;gap:10px;pointer-events:none}
 .tr-toast{pointer-events:auto;width:300px;box-sizing:border-box;background:rgba(20,20,25,.92);border:2px solid #487eb0;border-radius:14px;padding:12px;color:#fff;font-size:14px;animation:trpop .22s ease-out}
@@ -237,10 +237,10 @@ document.head.appendChild(trStyle);
 const trToasts = document.createElement("div"); trToasts.id = "tr-toasts"; document.body.appendChild(trToasts);
 
 const tr = document.createElement("div"); tr.id = "trade-screen"; tr.className = "rb";
-tr.style.cssText = "position:fixed;inset:0;margin:auto;width:460px;max-width:92vw;height:400px;max-height:80vh;background:rgba(0,0,0,.78);z-index:1000;border-radius:20px;border:3px solid rgba(255,255,255,.2);backdrop-filter:blur(8px);display:none;flex-direction:column;padding:22px;box-sizing:border-box;color:#fff";
-tr.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><h2 class="inv-title-text" style="color:#D9BFF2;font-size:13px;font-family:'Press Start 2P',cursive!important">Send Trade Request</h2><button class="close-screen-btn" id="tr-close">✖</button></div>
-<div id="tr-results" style="flex:1;overflow-y:auto"></div>
-<input id="tr-user" class="sell-input" autocomplete="off" placeholder="Username" style="width:100%;box-sizing:border-box;margin:10px 0 0;padding:12px;font-size:14px;text-align:left">`;
+tr.style.cssText = "position:fixed;inset:0;margin:auto;width:400px;max-width:92vw;height:360px;max-height:80vh;background:#000;z-index:1000;border-radius:8px;border:1px solid #333;display:none;flex-direction:column;padding:14px;box-sizing:border-box;color:#fff";
+tr.innerHTML = `<button id="tr-close" style="display:none"></button>
+<div style="position:relative;margin-bottom:14px"><span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:16px;pointer-events:none">🔍</span><input id="tr-user" autocomplete="off" placeholder="Search for a user" style="width:100%;box-sizing:border-box;height:42px;padding:0 12px 0 40px;background:#000;border:1px solid #fff;border-radius:3px;color:#fff;font-size:15px;outline:none"></div>
+<div id="tr-results" style="flex:1;overflow-y:auto"></div>`;
 document.body.appendChild(tr);
 
 const HINT = '<div class="tr-hint">Type a username to search</div>';
@@ -278,7 +278,7 @@ function playerRow(uid, u) {
   const nm = document.createElement("div"); nm.className = "tr-name"; nm.textContent = "@" + u.username;
   const st = document.createElement("div"); st.textContent = on ? "Online" : "Offline"; st.style.color = on ? "#2ecc71" : "#e74c3c";
   mid.append(nm, st);
-  const b = document.createElement("button"); b.className = "tr-send"; b.textContent = "Send Trade Request"; b.disabled = !on;
+  const b = document.createElement("button"); b.className = "tr-send"; b.textContent = "Send Trade"; b.disabled = !on;
   b.onclick = () => sendRequest(uid, u.username, b);
   r.append(img, mid, b); return r;
 }
@@ -286,7 +286,7 @@ async function sendRequest(uid, uname, btn) {
   if (outbox.some(t => t.to === uid && recent(t))) return toast("Request already pending");
   btn.disabled = true;
   try {
-    await addDoc(collection(db, "trades"), { from: me, fromName: username, to: uid, toName: uname, give: {}, ask: {}, status: "pending", createdAt: serverTimestamp() });
+    await addDoc(collection(db, "trades"), { from: me, fromName: username, to: uid, toName: uname, give: {}, ask: {}, offers: {}, status: "pending", createdAt: serverTimestamp() });
     btn.textContent = "Request sent"; toast("Trade request sent!");
   } catch (e) { btn.disabled = false; toast(e.message); }
 }
@@ -319,9 +319,99 @@ async function respond(t, status) {
   catch (e) { toast(e.message); }
 }
 
+/* ---------- Trade : fenêtre d'échange ---------- */
+const twStyle = document.createElement("style");
+twStyle.textContent = `.tw-grid{flex:1;overflow-y:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:12px;align-content:start}
+.tw-card{background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.15);border-radius:16px;padding:8px;display:flex;flex-direction:column;align-items:center;gap:6px;min-height:112px}
+.tw-card.click{cursor:pointer}.tw-card.click:hover{background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.4)}
+.tw-card.on{border-color:#4ADE80;background:rgba(74,222,128,.2)}
+.tw-card .nm{font-size:12px;text-align:center}.tw-card img{width:44px;height:44px;object-fit:contain}
+.tw-card .q{align-self:flex-end;font-size:14px;margin-top:auto}
+.tw-hint{grid-column:1/-1;color:#9aa3ad;text-align:center;padding:30px 0;font-size:14px}
+#trading-screen{animation:trpop .22s ease-out}`;
+document.head.appendChild(twStyle);
+const tw = document.createElement("div"); tw.id = "trading-screen"; tw.className = "rb";
+tw.style.cssText = "position:fixed;inset:0;margin:auto;width:min(820px,94vw);height:min(540px,86vh);background:rgba(0,0,0,.6);z-index:1000;border-radius:25px;border:3px solid rgba(255,255,255,.2);backdrop-filter:blur(8px);display:none;flex-direction:column;padding:22px;box-sizing:border-box;color:#fff";
+tw.innerHTML = `<div class="screen-header" style="margin-bottom:14px;padding-bottom:12px"><h2 class="inv-title-text" id="tw-title" style="color:#fff;font-size:14px"></h2><button class="close-screen-btn" id="trading-close">Close ✖</button></div>
+<div style="flex:1;display:flex;min-height:0">
+<div style="flex:1;display:flex;flex-direction:column;min-width:0;padding-right:14px"><div style="font-size:16px;margin-bottom:10px;text-align:center">Your offer</div><div id="tw-mine" class="tw-grid"></div></div>
+<div style="width:2px;background:rgba(255,255,255,.2)"></div>
+<div style="flex:1;display:flex;flex-direction:column;min-width:0;padding-left:14px"><div id="tw-their-title" style="font-size:16px;margin-bottom:10px;text-align:center"></div><div id="tw-theirs" class="tw-grid"></div></div></div>`;
+document.body.appendChild(tw);
+
+const am2 = document.createElement("div"); am2.id = "add-modal"; am2.className = "rb";
+am2.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:2100;display:none;align-items:center;justify-content:center;backdrop-filter:blur(2px)";
+const qcol = (vals, cls, last) => `<div class="qty-col">${vals.map(v => `<button class="qty-btn ${cls}" data-d="${v}">${v}</button>`).join("")}<button class="qty-btn ${cls}" data-d="${last.toLowerCase()}">${last}</button></div>`;
+am2.innerHTML = `<div class="sell-box"><h3>Quantity to add</h3><div id="add-name" style="font-size:15px"></div>
+<div style="display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:12px;align-items:center;margin:14px 0">${qcol(["-1", "-3", "-5", "-10"], "qty-neg", "None")}<div id="add-num" style="font-size:26px;text-align:center;color:#fff">0</div>${qcol(["+1", "+3", "+5", "+10"], "qty-pos", "All")}</div>
+<div class="sell-actions"><button class="acc-btn" id="add-ok">Confirm</button><button class="acc-btn danger" id="add-cancel">Cancel</button></div></div>`;
+document.body.appendChild(am2);
+
+let cur = null, curUnsub = null, twTimer = null, sigLast = "", addType = null, addQty = 0, addMax = 0;
+const owned = t => (accounts[currentAccountName] || {})[APPLE_FIELDS[t]] || 0;
+const offerOf = (uid, t) => (cur && cur.offers && cur.offers[uid] && cur.offers[uid][t]) || 0;
+function twCard(type, qty, click) {
+  const c = document.createElement("div"); c.className = "tw-card" + (click ? " click" : "") + (click && qty > 0 ? " on" : "");
+  const n = document.createElement("div"); n.className = "nm"; n.textContent = APPLE_NAMES[type];
+  const im = new Image(); im.src = IMG_FRUITS[type];
+  const q = document.createElement("div"); q.className = "q"; q.textContent = "x" + fmtNum(qty);
+  c.append(n, im, q); if (click) c.onclick = click; return c;
+}
+function renderTrading() {
+  if (!cur) return;
+  const other = cur.from === me ? cur.to : cur.from;
+  const sig = JSON.stringify([cur.offers || {}, APPLE_ORDER.map(owned)]);
+  if (sig === sigLast) return; sigLast = sig;
+  const mine = $("tw-mine"), theirs = $("tw-theirs"); mine.innerHTML = ""; theirs.innerHTML = "";
+  const hint = m => `<div class="tw-hint">${m}</div>`;
+  APPLE_ORDER.forEach(t => { if (owned(t) > 0 || offerOf(me, t) > 0) mine.appendChild(twCard(t, offerOf(me, t), () => openAdd(t))); });
+  if (!mine.children.length) mine.innerHTML = hint("You have no apples");
+  APPLE_ORDER.forEach(t => { if (offerOf(other, t) > 0) theirs.appendChild(twCard(t, offerOf(other, t))); });
+  if (!theirs.children.length) theirs.innerHTML = hint("Nothing yet");
+}
+function openTrading(t) {
+  if (cur) return;
+  cur = t; sigLast = "";
+  const other = t.from === me ? t.toName : t.fromName;
+  $("tw-title").textContent = "Trading with @" + other;
+  $("tw-their-title").textContent = "@" + other + "'s offer";
+  ["inventory-screen", "shop-screen", "index-screen"].forEach(i => $(i).style.display = "none");
+  tr.style.display = "none"; tw.style.display = "flex"; renderTrading();
+  curUnsub = onSnapshot(doc(db, "trades", t.id), s => {
+    if (!s.exists()) return stopTrading();
+    cur = { id: s.id, ...s.data() };
+    if (cur.status !== "accepted") { toast("@" + other + " cancelled the trade"); return stopTrading(); }
+    renderTrading();
+  });
+  twTimer = setInterval(renderTrading, 1500);
+}
+function stopTrading() {
+  if (curUnsub) curUnsub(); curUnsub = null; clearInterval(twTimer); cur = null;
+  tw.style.display = "none"; am2.style.display = "none";
+}
+$("trading-close").onclick = () => {
+  const id = cur && cur.id; stopTrading();
+  if (id) updateDoc(doc(db, "trades", id), { status: "cancelled" }).catch(() => {});
+};
+const setAdd = n => { addQty = Math.max(0, Math.min(addMax, n)); $("add-num").textContent = addQty; };
+function openAdd(type) {
+  addType = type; addMax = owned(type); $("add-name").textContent = APPLE_NAMES[type];
+  setAdd(offerOf(me, type)); am2.style.display = "flex";
+}
+am2.addEventListener("click", e => {
+  const b = e.target.closest("[data-d]"); if (!b) return; const d = b.dataset.d;
+  setAdd(d === "none" ? 0 : d === "all" ? addMax : addQty + parseInt(d));
+});
+$("add-cancel").onclick = () => { am2.style.display = "none"; };
+$("add-ok").onclick = async () => {
+  const id = cur && cur.id; am2.style.display = "none"; if (!id) return;
+  try { await updateDoc(doc(db, "trades", id), { [`offers.${me}.${addType}`]: addQty > 0 ? addQty : deleteField() }); }
+  catch (e) { toast(e.message); }
+};
+
 /* ---------- session ---------- */
 onAuthStateChanged(auth, async user => {
-  unsubs.forEach(u => u()); unsubs = []; loaded = false; inbox = []; outbox = [];
+  unsubs.forEach(u => u()); unsubs = []; loaded = false; inbox = []; outbox = []; stopTrading();
   if (!user) {
     if (me) { me = null; try { leaveGame(); } catch (e) {} }
     ov.style.display = "flex"; return;
@@ -340,6 +430,12 @@ onAuthStateChanged(auth, async user => {
   unsubs.push(onSnapshot(query(collection(db, "trades"), where("from", "==", me), where("status", "==", "pending")), s => {
     outbox = s.docs.map(d => ({ id: d.id, ...d.data() }));
   }));
+  ["to", "from"].forEach(k => unsubs.push(onSnapshot(query(collection(db, "trades"), where(k, "==", me), where("status", "==", "accepted")), s => {
+    s.docChanges().forEach(c => {
+      if (c.type !== "added") return; const t = { id: c.doc.id, ...c.doc.data() };
+      if (t.createdAt && Date.now() - t.createdAt.toMillis() < 1800000) openTrading(t);
+    });
+  })));
 });
 
 
