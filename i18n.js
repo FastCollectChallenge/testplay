@@ -4,7 +4,7 @@
   const $ = id => document.getElementById(id);
   const L = document.createElement("link"); L.rel = "stylesheet"; L.href = "https://fonts.googleapis.com/css2?family=Montserrat:wght@400&display=swap"; document.head.appendChild(L);
   const S = document.createElement("style");
-  S.textContent = `.rb,.rb *,.admin-msg,.admin-msg *,#spawn-panel,#spawn-panel *{font-family:'Montserrat',sans-serif!important;font-weight:400!important}
+  S.textContent = `.rb,.rb *,.admin-msg,.admin-msg *{font-family:'Montserrat',sans-serif!important;font-weight:400!important}
   .lang-sw{display:flex;gap:3px;padding:4px;border:2px dotted #f1c40f;border-radius:12px;background:rgba(0,0,0,.35);position:absolute;z-index:20;--ls:30px}
   .lang-btn{width:var(--ls);height:var(--ls);padding:0;border:2px solid #f1c40f;background:#000;cursor:pointer;overflow:hidden;position:relative;display:block}
   .lang-btn{border-radius:8px}
@@ -59,7 +59,7 @@
     "Username or email": "Nom d'utilisateur ou e-mail", "Password (6+ chars)": "Mot de passe (6 caractères min.)",
     "Invalid username": "Pseudo invalide", "Username already taken": "Pseudo déjà pris",
     "Choose a username (3-16: a-z, 0-9, _):": "Choisis un pseudo (3-16 : a-z, 0-9, _) :",
-    "Choose your username and profile picture": "Choisis ton pseudo et ta photo de profil", "Edit your profile picture": "Modifier ta photo de profil", "Choose your profile picture": "Choisis ta photo de profil", "Autosell": "Vente auto", "Select apples to sell": "Sélectionner des pommes à vendre", "Select all": "Tout sélectionner", "Sell": "Vendre", "Apples selected are sold automatically when collected": "Les pommes sélectionnées sont vendues automatiquement quand tu les ramasses",
+    "Choose your username and profile picture": "Choisis ton pseudo et ta photo de profil", "Edit your profile picture": "Modifier ta photo de profil", "Choose your profile picture": "Choisis ta photo de profil", "Autosell": "Vente auto", "All": "Tout", "None": "Aucun", "Select apples to sell": "Sélectionner des pommes à vendre", "Select all": "Tout sélectionner", "Sell": "Vendre", "Apples selected are sold automatically when collected": "Les pommes sélectionnées sont vendues automatiquement quand tu les ramasses",
     "Username (3-16: a-z, 0-9, _)": "Pseudo (3-16 : a-z, 0-9, _)", "Profile picture URL (https://...)": "URL de la photo de profil (https://...)",
     "Continue": "Continuer", "Save": "Enregistrer", "Log out": "Se déconnecter", "Close": "Fermer", "Import my local progress": "Importer ma progression locale",
     "Invalid picture URL (must start with https://)": "URL de photo invalide (doit commencer par https://)"
@@ -132,7 +132,7 @@
   const hs = $("home-screen");
   if (hs) {
     const sw = makeLangSwitch();
-    sw.style.cssText = "top:calc(4*var(--u));left:calc(12*var(--u));--ls:calc(26*var(--u))";
+    sw.style.cssText = "top:calc(54*var(--u));left:calc(86*var(--u));--ls:calc(22*var(--u));padding:calc(3*var(--u));border-width:calc(2*var(--u));gap:calc(3*var(--u));border-radius:calc(10*var(--u))";
     hs.appendChild(sw);
   }
   if (lang === "fr") setLang("fr");
