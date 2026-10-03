@@ -7,7 +7,13 @@
   const css = document.createElement("style");
   css.textContent = `.nun,.nun *{font-family:'Montserrat',sans-serif!important;font-weight:400!important}
   .logo-placeholder{border:none!important;background:none!important;padding:0!important}
-  .side-btn .side-btn-label{font-size:6px!important}
+  #inv-btn .side-btn-label{font-size:6px!important}
+  #shop-btn .side-btn-label,#index-btn .side-btn-label,#trade-btn .side-btn-label{font-size:10px!important}
+  .fr #shop-btn .side-btn-label,.fr #trade-btn .side-btn-label{font-size:8px!important}
+  @keyframes popin{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}
+  @keyframes fadein{from{opacity:0}to{opacity:1}}
+  #inventory-screen,#shop-screen,#index-screen,#trade-screen,.sell-box,.confirm-box,#autosell-modal>div{animation:popin .22s ease-out}
+  #sell-modal,#custom-confirm-modal,#autosell-modal,#profile-page{animation:fadein .2s ease-out}
   #sell-modal .sell-box{width:460px!important}
   .qty-col{display:flex;flex-direction:column;gap:6px}
   .qty-btn{border:0;border-radius:8px;padding:8px 0;font-size:10px;color:#fff;cursor:pointer}
