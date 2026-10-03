@@ -8,8 +8,13 @@
   css.textContent = `.nun,.nun *{font-family:'Montserrat',sans-serif!important;font-weight:400!important}
   .logo-placeholder{border:none!important;background:none!important;padding:0!important}
   .side-btn .side-btn-label{font-size:6px!important}
+  #sell-modal .sell-box{width:460px!important}
+  .qty-col{display:flex;flex-direction:column;gap:6px}
+  .qty-btn{border:0;border-radius:8px;padding:8px 0;font-size:10px;color:#fff;cursor:pointer}
+  .qty-btn:hover{filter:brightness(1.2)}.qty-neg{background:#c23616}.qty-pos{background:#487eb0}
   #trade-btn{position:absolute!important;top:0;left:84px}
-  #trade-btn .side-btn-label{color:#fff}
+  #trade-btn .side-btn-label{color:#677f85}
+  #trade-btn img{filter:url(#fc-tint)}
   #inv-bar{position:absolute;left:30px;right:30px;bottom:18px;display:flex;justify-content:space-between;align-items:center;pointer-events:none}
   #inv-bar button{pointer-events:auto}
   .bar-btn,.bar-half{border:0;font-size:16px;font-weight:400;color:#fff;cursor:pointer}
@@ -32,7 +37,7 @@
 
   /* ---------- logos ---------- */
   const lg = document.querySelector(".logo-placeholder");
-  if (lg) lg.innerHTML = `<img src="${LOGO}" style="width:calc(50*var(--u));height:calc(50*var(--u));object-fit:contain;display:block">`;
+  if (lg) lg.innerHTML = `<img src="${LOGO}" style="width:calc(32*var(--u));height:calc(32*var(--u));object-fit:contain;display:block">`;
   const li = document.querySelector(".leave-icon");
   if (li) li.innerHTML = `<img src="${TITLE_LOGO}" style="width:40px;height:40px;object-fit:contain;display:block">`;
   const ic = document.createElement("link"); ic.rel = "icon"; ic.href = TITLE_LOGO; document.head.appendChild(ic);
@@ -158,5 +163,34 @@
     const s = SCR.find(open);
     if (s && !$(s).contains(t)) closeTop();
   });
+  /* ---------- icône Trade en #677f85 (filtre SVG) ---------- */
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("width", "0"); svg.setAttribute("height", "0"); svg.style.position = "absolute";
+  svg.innerHTML = '<filter id="fc-tint" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0 0 0 0 0.404  0 0 0 0 0.498  0 0 0 0 0.522  0 0 0 1 0"/></filter>';
+  document.body.appendChild(svg);
+
+  /* ---------- logo Discord ---------- */
+  const di = document.querySelector(".discord-btn-left img");
+  if (di) { di.src = "https://www.pngkey.com/png/full/20-200938_white-discord-logo-png-png-free-discord-logo.png"; di.style.borderRadius = "0"; di.style.objectFit = "contain"; }
+
+  /* ---------- vente : -1 -3 -5 -10 None | nombre | +1 +3 +5 +10 All ---------- */
+  const sb = document.querySelector("#sell-modal .sell-box"), qIn = $("sell-quantity");
+  qIn.style.display = "none";
+  const hint = sb.querySelector(".sell-hint"); if (hint) hint.style.display = "none";
+  const qui = document.createElement("div");
+  qui.style.cssText = "display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:12px;align-items:center;margin:14px 0";
+  const col = (vals, cls, last) => `<div class="qty-col">${vals.map(v => `<button class="qty-btn ${cls}" data-d="${v}">${v}</button>`).join("")}<button class="qty-btn ${cls}" data-d="${last.toLowerCase()}">${last}</button></div>`;
+  qui.innerHTML = col(["-1", "-3", "-5", "-10"], "qty-neg", "None") + '<div id="qty-num" style="font-size:26px;text-align:center;color:#fff">0</div>' + col(["+1", "+3", "+5", "+10"], "qty-pos", "All");
+  sb.insertBefore(qui, sb.querySelector(".sell-actions"));
+  let qty = 0;
+  const stock = () => { const a = acc(); return a && activeSellType ? (a[APPLE_FIELDS[activeSellType]] || 0) : 0; };
+  const setQty = n => { qty = Math.max(0, Math.min(stock(), n)); $("qty-num").textContent = qty; qIn.value = String(qty); };
+  qui.addEventListener("click", e => {
+    const b = e.target.closest("[data-d]"); if (!b) return; const d = b.dataset.d;
+    setQty(d === "none" ? 0 : d === "all" ? stock() : qty + parseInt(d));
+  });
+  const _os = window.openSellModal;
+  window.openSellModal = function () { _os.apply(this, arguments); setQty(0); };
+
   decorate();
 })();
