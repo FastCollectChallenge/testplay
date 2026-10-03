@@ -33,7 +33,7 @@
   /* ---------- dictionnaire ---------- */
   const EX = {
     "Latest spawn": "Dernière apparition", "Latest good spawn": "Dernière bonne apparition", "Best spawn": "Meilleure apparition",
-    "INVENTORY": "INVENTAIRE", "Close ✖": "Fermer ✖", "Apples": "Pommes", "Luck Potions": "Potions de chance", "🏪 SHOP": "🏪 BOUTIQUE",
+    "INVENTORY": "INVENTAIRE", "Close ✖": "Fermer ✖", "Apples": "Pommes", "Luck Potions": "Potions de chance", "SHOP": "BOUTIQUE", "Language": "Langue",
     "Yes": "Oui", "No": "Non", "Confirm": "Confirmer", "Cancel": "Annuler", "Sell Apples": "Vendre des pommes",
     'Type "Max" to sell all': 'Écris "Max" pour tout vendre',
     "Inventory": "Inventaire", "Shop": "Boutique", "Leave?": "Quitter ?", "Trade": "Échange", "TRADE": "ÉCHANGE",
@@ -128,12 +128,6 @@
     if (cards[1]) cards[1].innerHTML = fr ? "MODE<br>ARCADE" : "ARCADE<br>MODE";
     try { if (fr) walk(document.body); else restore(); } catch (e) { console.error("i18n:", e); }
     window.dispatchEvent(new Event("langchange"));
-  }
-  const hs = $("home-screen");
-  if (hs) {
-    const sw = makeLangSwitch();
-    sw.style.cssText = "top:calc(54*var(--u));left:calc(86*var(--u));--ls:calc(22*var(--u));padding:calc(3*var(--u));border-width:calc(2*var(--u));gap:calc(3*var(--u));border-radius:calc(10*var(--u))";
-    hs.appendChild(sw);
   }
   if (lang === "fr") setLang("fr");
 })();
