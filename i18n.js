@@ -59,7 +59,10 @@
     "Username or email": "Nom d'utilisateur ou e-mail", "Password (6+ chars)": "Mot de passe (6 caractères min.)",
     "Invalid username": "Pseudo invalide", "Username already taken": "Pseudo déjà pris",
     "Choose a username (3-16: a-z, 0-9, _):": "Choisis un pseudo (3-16 : a-z, 0-9, _) :",
-    "Choose your username and profile picture": "Choisis ton pseudo et ta photo de profil", "Edit your profile picture": "Modifier ta photo de profil", "Choose your profile picture": "Choisis ta photo de profil", "Autosell": "Vente auto", "All": "Tout", "None": "Aucun", "Select apples to sell": "Sélectionner des pommes à vendre", "Select all": "Tout sélectionner", "Sell": "Vendre", "Apples selected are sold automatically when collected": "Les pommes sélectionnées sont vendues automatiquement quand tu les ramasses",
+    "Choose your username and profile picture": "Choisis ton pseudo et ta photo de profil", "Edit your profile picture": "Modifier ta photo de profil", "Choose your profile picture": "Choisis ta photo de profil", "Autosell": "Vente auto", "All": "Tout", "None": "Aucun", "Online": "En ligne", "Offline": "Hors ligne", "Send Trade Request": "Envoyer une demande d'échange",
+    "Type a username to search": "Tape un pseudo pour chercher", "No player found": "Aucun joueur trouvé", "Username": "Pseudo",
+    "sent you a trade request": "t'a envoyé une demande d'échange", "Request sent": "Demande envoyée", "Trade request sent!": "Demande d'échange envoyée !",
+    "Request already pending": "Demande déjà en attente", "Trade request accepted": "Demande d'échange acceptée", "Trade request declined": "Demande d'échange refusée", "Select apples to sell": "Sélectionner des pommes à vendre", "Select all": "Tout sélectionner", "Sell": "Vendre", "Apples selected are sold automatically when collected": "Les pommes sélectionnées sont vendues automatiquement quand tu les ramasses",
     "Username (3-16: a-z, 0-9, _)": "Pseudo (3-16 : a-z, 0-9, _)", "Profile picture URL (https://...)": "URL de la photo de profil (https://...)",
     "Continue": "Continuer", "Save": "Enregistrer", "Log out": "Se déconnecter", "Close": "Fermer", "Import my local progress": "Importer ma progression locale",
     "Invalid picture URL (must start with https://)": "URL de photo invalide (doit commencer par https://)"
@@ -124,6 +127,7 @@
     lang = c; localStorage.setItem("fc_lang", c);
     document.querySelectorAll(".lang-btn").forEach(b => b.classList.toggle("on", b.dataset.l === c));
     const fr = c === "fr", cards = document.querySelectorAll(".mode-card");
+    document.documentElement.classList.toggle("fr", fr);
     if (cards[0]) cards[0].innerHTML = fr ? "MODE<br>AVENTURE" : "ADVENTURE<br>MODE";
     if (cards[1]) cards[1].innerHTML = fr ? "MODE<br>ARCADE" : "ARCADE<br>MODE";
     try { if (fr) walk(document.body); else restore(); } catch (e) { console.error("i18n:", e); }
