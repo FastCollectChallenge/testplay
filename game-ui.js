@@ -37,7 +37,7 @@
 
   /* ---------- logos ---------- */
   const lg = document.querySelector(".logo-placeholder");
-  if (lg) lg.innerHTML = `<img src="${LOGO}" style="width:calc(32*var(--u));height:calc(32*var(--u));object-fit:contain;display:block">`;
+  if (lg) lg.innerHTML = `<img src="${LOGO}" style="width:calc(72*var(--u));height:calc(72*var(--u));object-fit:contain;display:block">`;
   const li = document.querySelector(".leave-icon");
   if (li) li.innerHTML = `<img src="${TITLE_LOGO}" style="width:40px;height:40px;object-fit:contain;display:block">`;
   const ic = document.createElement("link"); ic.rel = "icon"; ic.href = TITLE_LOGO; document.head.appendChild(ic);
@@ -191,6 +191,10 @@
   });
   const _os = window.openSellModal;
   window.openSellModal = function () { _os.apply(this, arguments); setQty(0); };
+
+  /* ---------- titres sans émoji ---------- */
+  const ti = document.querySelector("#index-screen .inv-title-text"); if (ti) ti.textContent = "INDEX";
+  const ts = document.querySelector("#shop-screen .inv-title-text"); if (ts) ts.textContent = "SHOP";
 
   decorate();
 })();
