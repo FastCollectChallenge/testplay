@@ -16,6 +16,7 @@ const app = initializeApp({
 const auth = getAuth(app), db = getFirestore(app);
 const $ = id => document.getElementById(id);
 const FAKE = "@fastcollect.app";
+const LOGO = "https://raw.githubusercontent.com/FastCollectChallenge/play/main/Fast%20Collect%20Challenge%20Ingame%20logo.png";
 const clean = s => (s || "").trim().toLowerCase();
 const okName = s => /^[a-z0-9_]{3,16}$/.test(s);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -51,7 +52,7 @@ const ov = document.createElement("div");
 ov.style.cssText = "position:fixed;inset:0;z-index:9000;background:#000;border:10px solid #f1c40f;box-sizing:border-box;display:flex;align-items:center;color:#f1c40f";
 const sBtn = (id, img, txt) => `<button id="${id}" style="display:flex;align-items:center;gap:14px;width:100%;padding:10px 20px;border:0;border-radius:50px;background:#fff;color:#222;font-size:15px;font-weight:500;cursor:pointer"><img src="${img}" style="width:28px;height:28px;border-radius:50%;object-fit:contain"><span>${txt}</span></button>`;
 const inp = "width:100%;box-sizing:border-box;padding:13px 16px;border-radius:12px;border:2px solid #f1c40f;background:#111;color:#fff;font-size:15px";
-ov.innerHTML = `<div style="width:48%;padding:0 4%;box-sizing:border-box;display:flex;flex-direction:column;align-items:flex-start"><div style="font-size:90px;line-height:1;padding:16px;border:4px dotted #f1c40f;border-radius:26px;margin-bottom:30px">🕹️</div><div style="font-size:44px;line-height:1.5;text-transform:uppercase;text-shadow:4px 4px 0 #333">Fast Collect Challenge</div></div>
+ov.innerHTML = `<div style="width:48%;padding:0 4%;box-sizing:border-box;display:flex;flex-direction:column;align-items:flex-start"><div style="padding:16px;border:4px dotted #f1c40f;border-radius:26px;margin-bottom:30px"><img src="${LOGO}" style="width:110px;height:110px;object-fit:contain;display:block"></div><div style="font-size:44px;line-height:1.5;text-transform:uppercase;text-shadow:4px 4px 0 #333">Fast Collect Challenge</div></div>
 <div class="rb" style="position:absolute;top:36px;right:170px;font-size:14px;color:#ddd"><span id="au-q">No account?</span> <a id="au-alt" href="#" style="color:#f1c40f;font-weight:700">Sign-up here</a></div>
 <div class="rb" style="width:52%;display:flex;justify-content:center"><div style="width:360px;display:flex;flex-direction:column;gap:14px">
 <input id="au-name" style="${inp}" placeholder="Username or email"><input id="au-pw" type="password" style="${inp}" placeholder="Password (6+ chars)">
@@ -59,7 +60,7 @@ ov.innerHTML = `<div style="width:48%;padding:0 4%;box-sizing:border-box;display
 <div id="au-social" style="display:flex;flex-direction:column;gap:14px">${sBtn("au-google", "https://png.pngtree.com/png-vector/20230817/ourmid/pngtree-google-logo-vector-png-image_9183290.png", "Log-in with Google")}${sBtn("au-github", "https://cdn-icons-png.flaticon.com/512/25/25231.png", "Log-in with Github")}<a id="au-guest" href="#" style="color:#aaa;text-align:center;font-size:13px">Play as guest</a></div>
 <div id="au-err" style="color:#ff6b6b;font-size:13px;min-height:16px;text-align:center"></div></div></div>`;
 document.body.appendChild(ov);
-if (window.makeLangSwitch) { const w = makeLangSwitch(); w.style.cssText = "top:20px;right:30px"; ov.appendChild(w); }
+if (window.makeLangSwitch) { const w = makeLangSwitch(); w.style.cssText = "top:14px;left:16px"; ov.appendChild(w); }
 const err = e => $("au-err").textContent = (e && (e.code || e.message)) || String(e);
 window.addEventListener("unhandledrejection", e => { console.error(e.reason); err(e.reason); });
 window.addEventListener("error", e => err(e.message));
@@ -103,9 +104,9 @@ $("au-guest").onclick = e => { e.preventDefault(); signInAnonymously(auth).catch
 /* ---------- profil ---------- */
 const AV0 = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'><rect width='10' height='10' fill='%23f1c40f'/><text x='1.3' y='8' font-size='7.5'>👤</text></svg>";
 let myPhoto = "";
-const pf = document.createElement("div");
+const pf = document.createElement("div"); pf.id = "profile-page";
 pf.style.cssText = "position:fixed;inset:0;z-index:9100;background:#000;border:10px solid #f1c40f;box-sizing:border-box;display:none;align-items:center;color:#f1c40f";
-pf.innerHTML = `<div style="width:48%;padding:0 4%;box-sizing:border-box;display:flex;flex-direction:column;align-items:flex-start"><div style="font-size:90px;line-height:1;padding:16px;border:4px dotted #f1c40f;border-radius:26px;margin-bottom:30px">🕹️</div><div style="font-size:44px;line-height:1.5;text-transform:uppercase;text-shadow:4px 4px 0 #333">Fast Collect Challenge</div></div>
+pf.innerHTML = `<div style="width:48%;padding:0 4%;box-sizing:border-box;display:flex;flex-direction:column;align-items:flex-start"><div style="padding:16px;border:4px dotted #f1c40f;border-radius:26px;margin-bottom:30px"><img src="${LOGO}" style="width:110px;height:110px;object-fit:contain;display:block"></div><div style="font-size:44px;line-height:1.5;text-transform:uppercase;text-shadow:4px 4px 0 #333">Fast Collect Challenge</div></div>
 <div class="rb" style="width:52%;display:flex;justify-content:center"><div style="width:380px;display:flex;flex-direction:column;gap:14px">
 <div id="pf-title" style="font-size:22px;font-weight:700;color:#fff;text-align:center;line-height:1.3"></div>
 <div style="display:flex;justify-content:center"><img id="pf-prev" style="width:110px;height:110px;border-radius:50%;object-fit:cover;border:3px solid #f1c40f;background:#222"></div>
@@ -115,7 +116,7 @@ pf.innerHTML = `<div style="width:48%;padding:0 4%;box-sizing:border-box;display
 <a id="pf-close" href="#" style="color:#ddd;text-align:center;font-size:13px">Close</a><a id="pf-out" href="#" style="color:#aaa;text-align:center;font-size:13px">Log out</a>
 <div id="pf-err" style="color:#ff6b6b;font-size:13px;min-height:16px;text-align:center"></div></div></div>`;
 document.body.appendChild(pf);
-if (window.makeLangSwitch) { const w = makeLangSwitch(); w.style.cssText = "top:20px;right:30px"; pf.appendChild(w); }
+if (window.makeLangSwitch) { const w = makeLangSwitch(); w.style.cssText = "top:14px;left:16px"; pf.appendChild(w); }
 const pferr = m => $("pf-err").textContent = m ? (m.code || m.message || String(m)) : "";
 function showPrev() {
   const im = $("pf-prev"), u = $("pf-photo").value.trim();
@@ -179,7 +180,7 @@ async function ensureProfile(user) {
 }
 
 function applyRemote(v) {
-  rev = v.rev; username = v.username; myPhoto = v.photo || ""; setAvatar(myPhoto);
+  rev = v.rev; username = v.username; myPhoto = v.photo || ""; setAvatar(myPhoto); if (window.autosellReset) window.autosellReset();
   accounts = { [username]: normalize(v.data) }; currentAccountName = username;
   updateAdventureHUD();
 }
@@ -216,10 +217,10 @@ window.addEventListener("pagehide", saveNow);
 
 /* ---------- Trade : UI ---------- */
 const trBtn = document.createElement("button");
-trBtn.className = "side-btn no-img"; trBtn.style.position = "relative";
-trBtn.innerHTML = '<span class="side-btn-label" style="font-size:8px">Trade</span><span id="tr-badge" style="display:none;position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;line-height:20px;border-radius:10px;background:#e84118;color:#fff;font-size:9px;text-align:center"></span>';
+trBtn.id = "trade-btn"; trBtn.className = "side-btn"; trBtn.style.background = "#fff";
+trBtn.innerHTML = `<img src="https://cdn-icons-png.flaticon.com/512/3439/3439283.png" alt="Trade" onerror="this.style.display='none';this.parentNode.classList.add('no-img')"><span class="side-btn-label">Trade</span><span id="tr-badge" style="display:none;position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;line-height:20px;border-radius:10px;background:#e84118;color:#fff;font-size:9px;text-align:center"></span>`;
 $("side-buttons").appendChild(trBtn);
-const tr = document.createElement("div");
+const tr = document.createElement("div"); tr.id = "trade-screen";
 tr.style.cssText = "position:fixed;top:5vh;left:5vw;width:90vw;height:90vh;background:rgba(0,0,0,.75);z-index:1000;border-radius:25px;border:3px solid rgba(255,255,255,.2);backdrop-filter:blur(8px);display:none;flex-direction:column;padding:30px;box-sizing:border-box;color:#fff;overflow-y:auto;font-size:10px;line-height:1.8";
 tr.innerHTML = `<div class="screen-header"><h2 class="inv-title-text" style="color:#D9BFF2">TRADE</h2><button class="close-screen-btn" id="tr-close">Close ✖</button></div>
   <div style="display:flex;gap:30px;flex-wrap:wrap">
@@ -268,9 +269,9 @@ tr.addEventListener("click", e => {
 });
 trBtn.onclick = () => {
   ["inventory-screen", "shop-screen", "index-screen"].forEach(i => $(i).style.display = "none");
-  gameActive = false; tr.style.display = "flex"; renderDraft(); renderTrades();
+  tr.style.display = "flex"; renderDraft(); renderTrades();
 };
-$("tr-close").onclick = () => { tr.style.display = "none"; if (!gameActive) { gameActive = true; update(); } };
+$("tr-close").onclick = () => { tr.style.display = "none"; };
 
 /* ---------- Trade : logique ---------- */
 async function sendOffer() {
@@ -340,3 +341,6 @@ window.addEventListener("langchange", () => {
   tr.querySelectorAll("select").forEach(el => { const v = el.value; el.innerHTML = opts(); el.value = v; });
   renderDraft(); renderTrades();
 });
+
+// interface du jeu (logos, popups sans pause, autosell...) : chargée automatiquement
+if (!window.__gameUI) { window.__gameUI = true; const g = document.createElement("script"); g.src = "game-ui.js"; document.head.appendChild(g); }
