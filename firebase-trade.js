@@ -3,7 +3,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getAuth, onAuthStateChanged, signOut, signInAnonymously, signInWithEmailAndPassword,
   createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, GithubAuthProvider } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, getDoc, runTransaction, collection, query, where, onSnapshot,
-  addDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  addDoc, updateDoc, serverTimestamp, getDocs, documentId, limit } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const app = initializeApp({
   apiKey: "AIzaSyDVkJX-VibTIhMp_WoTqQ6LzNOy7G5OwmY",
@@ -220,95 +220,103 @@ const trBtn = document.createElement("button");
 trBtn.id = "trade-btn"; trBtn.className = "side-btn"; trBtn.style.background = "rgb(255, 255, 255)";
 trBtn.innerHTML = `<img src="https://cdn-icons-png.flaticon.com/512/3439/3439283.png" alt="Trade" onerror="this.style.display='none';this.parentNode.classList.add('no-img')"><span class="side-btn-label">Trade</span><span id="tr-badge" style="display:none;position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;line-height:20px;border-radius:10px;background:#e84118;color:#fff;font-size:9px;text-align:center"></span>`;
 $("side-buttons").appendChild(trBtn);
-const tr = document.createElement("div"); tr.id = "trade-screen";
-tr.style.cssText = "position:fixed;top:5vh;left:5vw;width:90vw;height:90vh;background:rgba(0,0,0,.75);z-index:1000;border-radius:25px;border:3px solid rgba(255,255,255,.2);backdrop-filter:blur(8px);display:none;flex-direction:column;padding:30px;box-sizing:border-box;color:#fff;overflow-y:auto;font-size:10px;line-height:1.8";
-tr.innerHTML = `<div class="screen-header"><h2 class="inv-title-text" style="color:#D9BFF2">TRADE</h2><button class="close-screen-btn" id="tr-close">Close ✖</button></div>
-  <div style="display:flex;gap:30px;flex-wrap:wrap">
-    <div style="flex:1;min-width:300px"><div style="color:#7ed6df;margin-bottom:8px">New offer</div>
-      <input id="tr-to" class="sell-input" style="width:100%;box-sizing:border-box" placeholder="Player username">
-      <div style="margin:12px 0 4px">You give:</div><div id="tr-give-pick"></div><div id="tr-give-list"></div>
-      <div style="margin:12px 0 4px">You ask:</div><div id="tr-ask-pick"></div><div id="tr-ask-list"></div>
-      <div style="margin-top:14px"><button class="acc-btn" id="tr-send">Send offer</button> <span id="tr-msg" style="color:#ff6b6b"></span></div></div>
-    <div style="flex:1;min-width:300px"><div style="color:#7ed6df;margin-bottom:8px">Received</div><div id="tr-in"></div>
-      <div style="color:#7ed6df;margin:18px 0 8px">Sent</div><div id="tr-out"></div></div></div>`;
+const trStyle = document.createElement("style");
+trStyle.textContent = `@keyframes trpop{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}
+.tr-hint{color:#aaa;text-align:center;padding:36px 0;font-size:14px}
+.tr-row{display:flex;align-items:center;gap:12px;padding:10px;background:rgba(255,255,255,.08);border-radius:14px;margin-bottom:8px}
+.tr-av{width:44px;height:44px;border-radius:50%;object-fit:cover;background:#222;flex:none}
+.tr-mid{flex:1;min-width:0;font-size:14px}.tr-name{color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tr-send{border:0;border-radius:10px;padding:9px 12px;background:#27ae60;color:#fff;cursor:pointer;font-size:12px;flex:none}
+.tr-send:disabled{background:#7f8c8d;cursor:not-allowed}
+#tr-toasts{position:fixed;right:20px;bottom:140px;z-index:1500;display:flex;flex-direction:column;gap:10px;pointer-events:none}
+.tr-toast{pointer-events:auto;width:300px;box-sizing:border-box;background:rgba(20,20,25,.92);border:2px solid #487eb0;border-radius:14px;padding:12px;color:#fff;font-size:14px;animation:trpop .22s ease-out}
+.tr-btns{display:flex;gap:8px;margin-top:10px}
+.tr-btns button{flex:1;background:transparent;color:#fff;border-radius:10px;padding:8px 0;font-size:13px;cursor:pointer}
+.tr-acc{border:2px solid #2ecc71}.tr-dec{border:2px solid #e74c3c}`;
+document.head.appendChild(trStyle);
+const trToasts = document.createElement("div"); trToasts.id = "tr-toasts"; document.body.appendChild(trToasts);
+
+const tr = document.createElement("div"); tr.id = "trade-screen"; tr.className = "rb";
+tr.style.cssText = "position:fixed;inset:0;margin:auto;width:460px;max-width:92vw;height:400px;max-height:80vh;background:rgba(0,0,0,.78);z-index:1000;border-radius:20px;border:3px solid rgba(255,255,255,.2);backdrop-filter:blur(8px);display:none;flex-direction:column;padding:22px;box-sizing:border-box;color:#fff";
+tr.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><h2 class="inv-title-text" style="color:#D9BFF2;font-size:13px;font-family:'Press Start 2P',cursive!important">Send Trade Request</h2><button class="close-screen-btn" id="tr-close">✖</button></div>
+<div id="tr-results" style="flex:1;overflow-y:auto"></div>
+<input id="tr-user" class="sell-input" autocomplete="off" placeholder="Username" style="width:100%;box-sizing:border-box;margin:10px 0 0;padding:12px;font-size:14px;text-align:left">`;
 document.body.appendChild(tr);
 
-const opts = () => ["money", ...APPLE_ORDER.map(t => "apple:" + t), ...SHOP_PRODUCTS.map(p => "potion:" + p.id)]
-  .map(k => `<option value="${k}">${esc(label(k))}</option>`).join("");
-["give", "ask"].forEach(side => {
-  $(`tr-${side}-pick`).innerHTML = `<select class="sell-input" style="width:55%;font-size:9px">${opts()}</select> <input class="sell-input" style="width:25%" placeholder="Qty"> <button class="acc-btn">Add</button>`;
-  const [sel, qty, add] = $(`tr-${side}-pick`).children;
-  add.onclick = () => {
-    const n = parseInt(qty.value); if (!(n > 0)) return;
-    draft[side][sel.value] = (draft[side][sel.value] || 0) + n; qty.value = ""; renderDraft();
-  };
-});
-function renderDraft() {
-  ["give", "ask"].forEach(side => {
-    const box = $(`tr-${side}-list`); box.innerHTML = "";
-    Object.entries(draft[side]).forEach(([k, n]) => {
-      const b = document.createElement("button"); b.className = "acc-btn"; b.textContent = `${fmtNum(n)}× ${label(k)} ✖`;
-      b.onclick = () => { delete draft[side][k]; renderDraft(); }; box.appendChild(b);
-    });
-  });
-}
-function renderTrades() {
-  const card = (t, inc) => `<div style="background:rgba(255,255,255,.1);border-radius:12px;padding:12px;margin-bottom:10px">
-    <b>${esc(inc ? t.fromName : t.toName)}</b> ${T(inc ? "offers" : "gets")}: ${describe(t.give)}<br>${T("in return")}: ${describe(t.ask)}<br>
-    ${inc ? `<button class="acc-btn" data-a="accept" data-id="${t.id}">Accept</button><button class="acc-btn danger" data-a="decline" data-id="${t.id}">Decline</button>`
-          : `<button class="acc-btn danger" data-a="cancel" data-id="${t.id}">Cancel</button>`}</div>`;
-  $("tr-in").innerHTML = inbox.map(t => card(t, true)).join("") || "-";
-  $("tr-out").innerHTML = outbox.map(t => card(t, false)).join("") || "-";
-  $("tr-badge").style.display = inbox.length ? "block" : "none"; $("tr-badge").textContent = inbox.length;
-}
-tr.addEventListener("click", e => {
-  const b = e.target.closest("[data-a]"); if (!b) return;
-  const t = [...inbox, ...outbox].find(x => x.id === b.dataset.id); if (!t) return;
-  if (b.dataset.a === "accept") acceptTrade(t);
-  else updateDoc(doc(db, "trades", t.id), { status: b.dataset.a === "decline" ? "declined" : "cancelled" }).catch(x => toast(x.message));
-});
+const HINT = '<div class="tr-hint">Type a username to search</div>';
+const beat = () => { if (me) updateDoc(doc(db, "users", me), { lastSeen: serverTimestamp() }).catch(() => {}); };
+const recent = t => !t.createdAt || Date.now() - t.createdAt.toMillis() < 120000;
+
 trBtn.onclick = () => {
   ["inventory-screen", "shop-screen", "index-screen"].forEach(i => $(i).style.display = "none");
-  tr.style.display = "flex"; renderDraft(); renderTrades();
+  tr.style.display = "flex"; $("tr-user").value = ""; $("tr-results").innerHTML = HINT; $("tr-user").focus();
 };
 $("tr-close").onclick = () => { tr.style.display = "none"; };
 
-/* ---------- Trade : logique ---------- */
-async function sendOffer() {
-  const msg = $("tr-msg"); msg.textContent = "";
-  const n = clean($("tr-to").value), { give, ask } = draft;
-  if (!n) { msg.textContent = "Enter a username"; return; }
-  if (!Object.keys(give).length && !Object.keys(ask).length) { msg.textContent = "Empty offer"; return; }
-  const mine = accounts[currentAccountName];
-  for (const [k, q] of Object.entries(give)) if (getQ(mine, k) < q) { msg.textContent = "You don't have enough: " + label(k); return; }
+/* recherche en direct */
+let searchTimer = null, searchSeq = 0;
+$("tr-user").oninput = () => { clearTimeout(searchTimer); searchTimer = setTimeout(doSearch, 300); };
+async function doSearch() {
+  const q = clean($("tr-user").value).replace(/^@/, ""), box = $("tr-results"), seq = ++searchSeq;
+  if (!q) { box.innerHTML = HINT; return; }
   try {
-    const u = await getDoc(doc(db, "usernames", n));
-    if (!u.exists()) { msg.textContent = "Player not found"; return; }
-    if (u.data().uid === me) { msg.textContent = "That's you!"; return; }
-    await addDoc(collection(db, "trades"), { from: me, fromName: username, to: u.data().uid, toName: n, give, ask, status: "pending", createdAt: serverTimestamp() });
-    draft = { give: {}, ask: {} }; renderDraft(); toast("Offer sent!");
-  } catch (e) { msg.textContent = e.message; }
+    const snap = await getDocs(query(collection(db, "usernames"), where(documentId(), ">=", q), where(documentId(), "<=", q + "\uf8ff"), limit(5)));
+    const ids = snap.docs.map(d => d.data().uid).filter(u => u !== me);
+    const users = await Promise.all(ids.map(u => getDoc(doc(db, "users", u))));
+    if (seq !== searchSeq) return;
+    box.textContent = "";
+    const found = users.filter(u => u.exists());
+    if (!found.length) { box.innerHTML = '<div class="tr-hint">No player found</div>'; return; }
+    found.forEach(u => box.appendChild(playerRow(u.id, u.data())));
+  } catch (e) { box.textContent = e.code || e.message; }
 }
-$("tr-send").onclick = sendOffer;
-
-async function acceptTrade(t) {
+function playerRow(uid, u) {
+  const on = !!u.lastSeen && Date.now() - u.lastSeen.toMillis() < 100000;
+  const r = document.createElement("div"); r.className = "tr-row";
+  const img = new Image(); img.className = "tr-av"; img.onerror = () => { img.onerror = null; img.src = AV0; }; img.src = u.photo || AV0;
+  const mid = document.createElement("div"); mid.className = "tr-mid";
+  const nm = document.createElement("div"); nm.className = "tr-name"; nm.textContent = "@" + u.username;
+  const st = document.createElement("div"); st.textContent = on ? "Online" : "Offline"; st.style.color = on ? "#2ecc71" : "#e74c3c";
+  mid.append(nm, st);
+  const b = document.createElement("button"); b.className = "tr-send"; b.textContent = "Send Trade Request"; b.disabled = !on;
+  b.onclick = () => sendRequest(uid, u.username, b);
+  r.append(img, mid, b); return r;
+}
+async function sendRequest(uid, uname, btn) {
+  if (outbox.some(t => t.to === uid && recent(t))) return toast("Request already pending");
+  btn.disabled = true;
   try {
-    await saveNow(); // envoie d'abord ma progression locale
-    await runTransaction(db, async x => {
-      const tRef = doc(db, "trades", t.id), fRef = doc(db, "users", t.from), oRef = doc(db, "users", t.to);
-      const [ts, fs, os] = await Promise.all([x.get(tRef), x.get(fRef), x.get(oRef)]);
-      const T = ts.data(), F = fs.data(), O = os.data();
-      if (T.status !== "pending") throw new Error("This offer is no longer available");
-      if (!isOffer(T.give) || !isOffer(T.ask)) throw new Error("Invalid offer");
-      const fd = normalize(F.data), od = normalize(O.data);
-      for (const [k, n] of Object.entries(T.give)) { if (getQ(fd, k) < n) throw new Error(F.username + " no longer has the offered items"); addQ(fd, k, -n); addQ(od, k, n); }
-      for (const [k, n] of Object.entries(T.ask)) { if (getQ(od, k) < n) throw new Error("You don't have the requested items"); addQ(od, k, -n); addQ(fd, k, n); }
-      x.update(fRef, { data: fd, rev: F.rev + 1, lastTradeId: t.id });
-      x.update(oRef, { data: od, rev: O.rev + 1, lastTradeId: t.id });
-      x.update(tRef, { status: "accepted" });
-    });
-    toast("Trade completed!");
-  } catch (e) { toast(e.message); }
+    await addDoc(collection(db, "trades"), { from: me, fromName: username, to: uid, toName: uname, give: {}, ask: {}, status: "pending", createdAt: serverTimestamp() });
+    btn.textContent = "Request sent"; toast("Trade request sent!");
+  } catch (e) { btn.disabled = false; toast(e.message); }
+}
+
+/* demandes reçues : mini pop-up en bas à droite */
+const shown = new Map(), dismissed = new Set();
+function renderIncoming(list) {
+  const ids = new Set();
+  list.forEach(t => {
+    if (!recent(t) || dismissed.has(t.id)) return;
+    ids.add(t.id); if (!shown.has(t.id)) shown.set(t.id, makeToast(t));
+  });
+  shown.forEach((el, id) => { if (!ids.has(id)) { el.remove(); shown.delete(id); } });
+}
+function makeToast(t) {
+  const c = document.createElement("div"); c.className = "tr-toast rb";
+  const m = document.createElement("div"), b = document.createElement("b"), sp = document.createElement("span");
+  b.textContent = "@" + t.fromName; sp.textContent = " sent you a trade request"; m.append(b, sp);
+  const row = document.createElement("div"); row.className = "tr-btns";
+  const ac = document.createElement("button"), de = document.createElement("button");
+  ac.className = "tr-acc"; ac.textContent = "Accept"; de.className = "tr-dec"; de.textContent = "Decline";
+  ac.onclick = () => respond(t, "accepted"); de.onclick = () => respond(t, "declined");
+  row.append(ac, de); c.append(m, row); trToasts.appendChild(c);
+  setTimeout(() => { dismissed.add(t.id); c.remove(); shown.delete(t.id); }, 30000);
+  return c;
+}
+async function respond(t, status) {
+  dismissed.add(t.id); const el = shown.get(t.id); if (el) el.remove(); shown.delete(t.id);
+  try { await updateDoc(doc(db, "trades", t.id), { status }); toast(status === "accepted" ? "Trade request accepted" : "Trade request declined"); }
+  catch (e) { toast(e.message); }
 }
 
 /* ---------- session ---------- */
@@ -319,28 +327,21 @@ onAuthStateChanged(auth, async user => {
     ov.style.display = "flex"; return;
   }
   try { if (!(await ensureProfile(user))) return; } catch (e) { err(e); ov.style.display = "flex"; return; }
-  me = user.uid;
+  me = user.uid; beat(); const hb = setInterval(beat, 45000); unsubs.push(() => clearInterval(hb));
   unsubs.push(onSnapshot(doc(db, "users", me), s => {
     if (!s.exists()) return; const v = s.data();
     if (!loaded || (!saving && v.rev > rev)) {
       try { applyRemote(v); loaded = true; ov.style.display = "none"; } catch (e) { err(e); console.error(e); }
     }
   }, e => { err(e); console.error(e); }));
-  let first = true;
   unsubs.push(onSnapshot(query(collection(db, "trades"), where("to", "==", me), where("status", "==", "pending")), s => {
-    inbox = s.docs.map(d => ({ id: d.id, ...d.data() }));
-    if (!first && s.docChanges().some(c => c.type === "added")) toast("New trade offer!");
-    first = false; renderTrades();
+    inbox = s.docs.map(d => ({ id: d.id, ...d.data() })); renderIncoming(inbox);
   }));
   unsubs.push(onSnapshot(query(collection(db, "trades"), where("from", "==", me), where("status", "==", "pending")), s => {
-    outbox = s.docs.map(d => ({ id: d.id, ...d.data() })); renderTrades();
+    outbox = s.docs.map(d => ({ id: d.id, ...d.data() }));
   }));
 });
 
-window.addEventListener("langchange", () => {
-  tr.querySelectorAll("select").forEach(el => { const v = el.value; el.innerHTML = opts(); el.value = v; });
-  renderDraft(); renderTrades();
-});
 
 // interface du jeu (logos, popups sans pause, autosell...) : chargée automatiquement
 if (!window.__gameUI) { window.__gameUI = true; const g = document.createElement("script"); g.src = "game-ui.js"; document.head.appendChild(g); }
