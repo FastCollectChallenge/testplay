@@ -2,9 +2,8 @@
 (function () {
   let lang = localStorage.getItem("fc_lang") || "en";
   const $ = id => document.getElementById(id);
-  const L = document.createElement("link"); L.rel = "stylesheet"; L.href = "https://fonts.googleapis.com/css2?family=Montserrat:wght@400&display=swap"; document.head.appendChild(L);
   const S = document.createElement("style");
-  S.textContent = `.rb,.rb *,.admin-msg,.admin-msg *{font-family:'Montserrat',sans-serif!important;font-weight:400!important}
+  S.textContent = `.rb,.rb *,.admin-msg,.admin-msg *{font-family:'Nunito',sans-serif!important;font-weight:700!important}
   .lang-sw{display:flex;gap:3px;padding:4px;border:2px dotted #f1c40f;border-radius:12px;background:rgba(0,0,0,.35);position:absolute;z-index:20;--ls:30px}
   .lang-btn{width:var(--ls);height:var(--ls);padding:0;border:2px solid #f1c40f;background:#000;cursor:pointer;overflow:hidden;position:relative;display:block}
   .lang-btn{border-radius:8px}
@@ -60,7 +59,7 @@
     "Invalid username": "Pseudo invalide", "Username already taken": "Pseudo déjà pris",
     "Choose a username (3-16: a-z, 0-9, _):": "Choisis un pseudo (3-16 : a-z, 0-9, _) :",
     "Choose your username and profile picture": "Choisis ton pseudo et ta photo de profil", "Edit your profile picture": "Modifier ta photo de profil", "Choose your profile picture": "Choisis ta photo de profil", "Autosell": "Vente auto", "All": "Tout", "None": "Aucun", "Online": "En ligne", "Offline": "Hors ligne", "Send Trade Request": "Envoyer une demande d'échange",
-    "Type a username to search": "Tape un pseudo pour chercher", "No player found": "Aucun joueur trouvé", "Username": "Pseudo",
+    "Type a username to search": "Tape un pseudo pour chercher", "Your offer": "Ton offre", "Quantity to add": "Quantité à ajouter", "Nothing yet": "Rien pour l'instant", "You have no apples": "Tu n'as aucune pomme", "Send Trade": "Envoyer l'échange", "Search for a user": "Rechercher un joueur", "No player found": "Aucun joueur trouvé", "Username": "Pseudo",
     "sent you a trade request": "t'a envoyé une demande d'échange", "Request sent": "Demande envoyée", "Trade request sent!": "Demande d'échange envoyée !",
     "Request already pending": "Demande déjà en attente", "Trade request accepted": "Demande d'échange acceptée", "Trade request declined": "Demande d'échange refusée", "Select apples to sell": "Sélectionner des pommes à vendre", "Select all": "Tout sélectionner", "Sell": "Vendre", "Apples selected are sold automatically when collected": "Les pommes sélectionnées sont vendues automatiquement quand tu les ramasses",
     "Username (3-16: a-z, 0-9, _)": "Pseudo (3-16 : a-z, 0-9, _)", "Profile picture URL (https://...)": "URL de la photo de profil (https://...)",
@@ -71,7 +70,8 @@
     "Candy Apples": "des pommes d'amour", "Lava Apples": "des pommes de lave", "Galaxy Apples": "des pommes galactiques", "Dark Apples": "des pommes noires",
     "Salhini Appelini": "des Salhini Appelini", "Bloodmoon Apple": "des pommes Bloodmoon", "Moony Apple": "des pommes lunaires" };
   const RX = [
-    [/^Score: (.*)$/, "Score : $1"], [/^Timer: (.*)$/, "Temps : $1"], [/^Luck x(\d+)$/, "Chance x$1"],
+    [/^Score: (.*)$/, "Score : $1"],
+    [/^Trading with (@\S+)$/, "Échange avec $1"], [/^(@\S+)'s offer$/, "Offre de $1"], [/^(@\S+) cancelled the trade$/, "$1 a annulé l'échange"], [/^Timer: (.*)$/, "Temps : $1"], [/^Luck x(\d+)$/, "Chance x$1"],
     [/^⚠️SERVERS RESET IN (\d+)s$/, "⚠️RÉINITIALISATION DES SERVEURS DANS $1s"],
     [/^Sell (.+) \((\+.+)\)$/, (m, n, p) => `Vendre ${SN[n] || n} (${p})`],
     [/^You don't have enough: (.+)$/, "Tu n'as pas assez de : $1"],
