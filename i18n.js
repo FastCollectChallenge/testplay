@@ -2,14 +2,15 @@
 (function () {
   let lang = localStorage.getItem("fc_lang") || "en";
   const $ = id => document.getElementById(id);
+  const L = document.createElement("link"); L.rel = "stylesheet"; L.href = "https://fonts.googleapis.com/css2?family=Montserrat:wght@400&display=swap"; document.head.appendChild(L);
   const S = document.createElement("style");
-  S.textContent = `.rb,.rb *,.admin-msg,.admin-msg *{font-family:'Nunito',sans-serif!important}.admin-msg{font-weight:900}
-  .lang-sw{display:flex;gap:8px;position:absolute;z-index:20;--ls:30px}
+  S.textContent = `.rb,.rb *,.admin-msg,.admin-msg *,#spawn-panel,#spawn-panel *{font-family:'Montserrat',sans-serif!important;font-weight:400!important}
+  .lang-sw{display:flex;gap:3px;padding:4px;border:2px dotted #f1c40f;border-radius:12px;background:rgba(0,0,0,.35);position:absolute;z-index:20;--ls:30px}
   .lang-btn{width:var(--ls);height:var(--ls);padding:0;border:2px solid #f1c40f;background:#000;cursor:pointer;overflow:hidden;position:relative;display:block}
   .lang-btn{border-radius:8px}
   .lang-btn img{width:100%;height:100%;object-fit:fill;display:block}
-  .lang-btn span{display:none;position:absolute;inset:0;align-items:center;justify-content:center;background:#f1c40f;color:#000;font-size:calc(var(--ls)*.36);font-weight:700}
-  .lang-btn:hover img{visibility:hidden}.lang-btn:hover span,.lang-btn.bad span{display:flex}
+  .lang-btn span{display:none;position:absolute;inset:0;align-items:center;justify-content:center;background:transparent;color:#fff;text-shadow:0 0 3px #000,0 0 6px #000;font-size:calc(var(--ls)*.38)}
+  .lang-btn:hover img{opacity:.4}.lang-btn:hover span,.lang-btn.bad span{display:flex}
   .lang-btn.on{box-shadow:inset 0 0 0 3px #f1c40f}`;
   document.head.appendChild(S);
 
@@ -29,7 +30,7 @@
     return d;
   };
 
-  /* ---------- dictionnaire mdrrr ---------- */
+  /* ---------- dictionnaire ---------- */
   const EX = {
     "Latest spawn": "Dernière apparition", "Latest good spawn": "Dernière bonne apparition", "Best spawn": "Meilleure apparition",
     "INVENTORY": "INVENTAIRE", "Close ✖": "Fermer ✖", "Apples": "Pommes", "Luck Potions": "Potions de chance", "🏪 SHOP": "🏪 BOUTIQUE",
@@ -131,7 +132,7 @@
   const hs = $("home-screen");
   if (hs) {
     const sw = makeLangSwitch();
-    sw.style.cssText = "top:calc(6*var(--u));left:calc(14*var(--u));--ls:calc(26*var(--u))";
+    sw.style.cssText = "top:calc(4*var(--u));left:calc(12*var(--u));--ls:calc(26*var(--u))";
     hs.appendChild(sw);
   }
   if (lang === "fr") setLang("fr");
