@@ -112,11 +112,12 @@ pf.innerHTML = `<div style="width:48%;padding:0 3%;box-sizing:border-box;display
 <div style="display:flex;justify-content:center"><img id="pf-prev" style="width:110px;height:110px;border-radius:50%;object-fit:cover;border:3px solid #f1c40f;background:#222"></div>
 <input id="pf-name" style="${inp}" placeholder="Username (3-16: a-z, 0-9, _)"><input id="pf-photo" style="${inp}" placeholder="Profile picture URL (https://...)">
 <label id="pf-imp-row" style="display:none;color:#ddd;font-size:13px"><input type="checkbox" id="pf-imp" checked> <span>Import my local progress</span> <b id="pf-imp-name"></b></label>
+<div id="pf-lang" style="display:none;align-items:center;justify-content:center;gap:12px;color:#ddd;font-size:14px"><span>Language</span></div>
 <button id="pf-ok" style="padding:13px;border:0;border-radius:50px;background:#f1c40f;color:#000;font-size:15px;font-weight:700;cursor:pointer"></button>
 <a id="pf-close" href="#" style="color:#ddd;text-align:center;font-size:13px">Close</a><a id="pf-out" href="#" style="color:#aaa;text-align:center;font-size:13px">Log out</a>
 <div id="pf-err" style="color:#ff6b6b;font-size:13px;min-height:16px;text-align:center"></div></div></div>`;
 document.body.appendChild(pf);
-if (window.makeLangSwitch) { const w = makeLangSwitch(); w.style.cssText = "top:14px;left:16px"; pf.appendChild(w); }
+if (window.makeLangSwitch) { const w = makeLangSwitch(); w.style.position = "static"; $("pf-lang").appendChild(w); }
 const pferr = m => $("pf-err").textContent = m ? (m.code || m.message || String(m)) : "";
 function showPrev() {
   const im = $("pf-prev"), u = $("pf-photo").value.trim();
@@ -129,7 +130,7 @@ function openProfilePage({ edit, noName, name, photo, loc, submit, cancel }) {
   $("pf-ok").textContent = edit ? "Save" : "Continue";
   $("pf-name").value = name || ""; $("pf-name").disabled = !!edit; $("pf-name").style.display = noName ? "none" : ""; $("pf-photo").value = photo || ""; showPrev();
   $("pf-imp-row").style.display = loc ? "block" : "none"; if (loc) $("pf-imp-name").textContent = `(${loc.k})`;
-  $("pf-close").style.display = edit ? "block" : "none"; pferr(""); pf.style.display = "flex";
+  $("pf-close").style.display = edit ? "block" : "none"; $("pf-lang").style.display = edit ? "flex" : "none"; pferr(""); pf.style.display = "flex";
   $("pf-ok").onclick = async () => {
     const n = noName ? name : clean($("pf-name").value), p = $("pf-photo").value.trim();
     if (!okName(n)) return pferr("Invalid username");
