@@ -5,7 +5,7 @@
   const LOGO = "https://raw.githubusercontent.com/FastCollectChallenge/play/main/Fast%20Collect%20Challenge%20Ingame%20logo.png";
   const PRICE = { red: 1, green: 3, golden: 7, diamond: 15, candy: 50, lava: 200, galaxy: 500, dark: 1000, moony: 50000, salhini: 676767, bloodmoon: 6666666 };
   const css = document.createElement("style");
-  css.textContent = `.nun,.nun *{font-family:'Montserrat',sans-serif!important;font-weight:400!important}
+  css.textContent = `.nun,.nun *{font-family:'Nunito',sans-serif!important;font-weight:700!important}
   .logo-placeholder{border:none!important;background:none!important;padding:0!important}
   #inv-btn .side-btn-label{font-size:6px!important}
   #shop-btn .side-btn-label,#index-btn .side-btn-label,#trade-btn .side-btn-label{font-size:10px!important}
@@ -148,10 +148,12 @@
   /* ---------- Échap / clic en dehors ---------- */
   function closeTop() {
     if (open("custom-confirm-modal")) { $("custom-confirm-no-btn").click(); return true; }
+    if (open("add-modal")) { $("add-cancel").click(); return true; }
     if (open("sell-modal")) { closeSellModal(); return true; }
     if (open("autosell-modal")) { closeAuto(); return true; }
     const pf = $("profile-page");
     if (pf && pf.style.display === "flex" && $("pf-close").style.display === "block") { $("pf-close").click(); return true; }
+    if (open("trading-screen")) { $("trading-close").click(); return true; }
     if (open("trade-screen")) { $("tr-close").click(); return true; }
     if (open("inventory-screen")) { toggleInventory(false); return true; }
     if (open("shop-screen")) { toggleShop(false); return true; }
@@ -164,7 +166,8 @@
     if (t.id === "custom-confirm-modal") return $("custom-confirm-no-btn").click();
     if (t.id === "sell-modal") return closeSellModal();
     if (t.id === "autosell-modal") return closeAuto();
-    if (open("custom-confirm-modal") || open("sell-modal") || open("autosell-modal")) return;
+    if (t.id === "add-modal") return $("add-cancel").click();
+    if (open("custom-confirm-modal") || open("sell-modal") || open("autosell-modal") || open("add-modal")) return;
     if (t.closest("#side-buttons,#account-settings-btn")) return;
     const s = SCR.find(open);
     if (s && !$(s).contains(t)) closeTop();
