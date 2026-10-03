@@ -1,16 +1,18 @@
 // game-ui.js : logos, popups sans pause, Échap / clic extérieur, Select apples to sell, Autosell, +$
 (function () {
   const $ = id => document.getElementById(id);
+  const TITLE_LOGO = "https://raw.githubusercontent.com/FastCollectChallenge/play/main/Fast%20Collect%20Challenge%20Title%20logo.png";
   const LOGO = "https://raw.githubusercontent.com/FastCollectChallenge/play/main/Fast%20Collect%20Challenge%20Ingame%20logo.png";
   const PRICE = { red: 1, green: 3, golden: 7, diamond: 15, candy: 50, lava: 200, galaxy: 500, dark: 1000, moony: 50000, salhini: 676767, bloodmoon: 6666666 };
   const css = document.createElement("style");
-  css.textContent = `.nun,.nun *{font-family:'Nunito',sans-serif!important}
+  css.textContent = `.nun,.nun *{font-family:'Montserrat',sans-serif!important;font-weight:400!important}
+  .logo-placeholder{border:none!important;background:none!important;padding:0!important}
   .side-btn .side-btn-label{font-size:6px!important}
-  #side-buttons{left:104px!important}
-  #trade-btn{position:absolute!important;top:0;left:-84px}
+  #trade-btn{position:absolute!important;top:0;left:84px}
+  #trade-btn .side-btn-label{color:#fff}
   #inv-bar{position:absolute;left:30px;right:30px;bottom:18px;display:flex;justify-content:space-between;align-items:center;pointer-events:none}
   #inv-bar button{pointer-events:auto}
-  .bar-btn,.bar-half{border:0;font-size:16px;font-weight:900;color:#fff;cursor:pointer}
+  .bar-btn,.bar-half{border:0;font-size:16px;font-weight:400;color:#fff;cursor:pointer}
   .bar-btn{border-radius:14px;padding:12px 20px}.bar-half{padding:12px 22px}
   .bar-blue{background:#487eb0}.bar-green{background:#27ae60}.bar-yellow{background:#f1c40f;color:#000}.bar-red{background:#c23616}
   #bar-right{display:flex;gap:12px;align-items:center}
@@ -21,7 +23,7 @@
   #inventory-grid{padding-bottom:80px!important}
   #inventory-grid.selmode .sell-btn{display:none}
   #inventory-grid.selmode .inv-item-card.sel{border-color:#4ADE80;background:rgba(74,222,128,.25)}
-  .auto-card{background:rgba(255,255,255,.08);border:3px solid rgba(255,255,255,.15);border-radius:16px;padding:10px;text-align:center;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;font-weight:800;font-size:14px}
+  .auto-card{background:rgba(255,255,255,.08);border:3px solid rgba(255,255,255,.15);border-radius:16px;padding:10px;text-align:center;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;font-weight:400;font-size:14px}
   .auto-card img{width:56px;height:56px;object-fit:contain}.auto-card b{color:#7f8fa6}
   .auto-card.on{border-color:#27ae60;background:rgba(39,174,96,.25)}.auto-card.on b{color:#4ADE80}
   .money-pop{position:absolute;left:0;bottom:100%;color:#4ADE80;font-size:18px;line-height:1;-webkit-text-stroke:1px #fff;paint-order:stroke fill;text-shadow:0 0 4px rgba(0,0,0,.35);animation:mpop 1.3s ease-out forwards;pointer-events:none;white-space:nowrap}
@@ -29,17 +31,11 @@
   document.head.appendChild(css);
 
   /* ---------- logos ---------- */
-  const LOGO_IMG = new Image(); LOGO_IMG.src = LOGO;
-  const ft = CanvasRenderingContext2D.prototype.fillText;
-  CanvasRenderingContext2D.prototype.fillText = function (t, x, y, ...r) {
-    if (String(t).codePointAt(0) === 0x1F579) { if (LOGO_IMG.complete && LOGO_IMG.naturalWidth) this.drawImage(LOGO_IMG, x - 22, y - 36, 44, 44); return; }
-    return ft.call(this, t, x, y, ...r);
-  };
   const lg = document.querySelector(".logo-placeholder");
   if (lg) lg.innerHTML = `<img src="${LOGO}" style="width:calc(50*var(--u));height:calc(50*var(--u));object-fit:contain;display:block">`;
   const li = document.querySelector(".leave-icon");
-  if (li) li.innerHTML = `<img src="${LOGO}" style="width:34px;height:34px;object-fit:contain;display:block">`;
-  const ic = document.createElement("link"); ic.rel = "icon"; ic.href = LOGO; document.head.appendChild(ic);
+  if (li) li.innerHTML = `<img src="${TITLE_LOGO}" style="width:40px;height:40px;object-fit:contain;display:block">`;
+  const ic = document.createElement("link"); ic.rel = "icon"; ic.href = TITLE_LOGO; document.head.appendChild(ic);
 
   /* ---------- popups sans pause ---------- */
   const open = id => { const e = $(id); return !!e && getComputedStyle(e).display !== "none"; };
@@ -86,7 +82,7 @@
   const am = document.createElement("div"); am.id = "autosell-modal"; am.className = "nun";
   am.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:2100;display:none;align-items:center;justify-content:center;backdrop-filter:blur(3px)";
   am.innerHTML = `<div style="background:#2f3640;border:3px solid #27ae60;border-radius:20px;padding:24px;width:min(760px,92vw);max-height:80vh;overflow:auto;color:#fff">
-    <div style="font-size:22px;font-weight:900;margin-bottom:6px">Autosell</div>
+    <div style="font-size:22px;font-weight:400;margin-bottom:6px">Autosell</div>
     <div style="color:#dcdde1;margin-bottom:16px">Apples selected are sold automatically when collected</div>
     <div id="auto-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px"></div>
     <div style="text-align:right;margin-top:16px"><button id="auto-close" class="bar-btn bar-red">Close</button></div></div>`;
