@@ -2,13 +2,11 @@
 (function () {
   let lang = localStorage.getItem("fc_lang") || "en";
   const $ = id => document.getElementById(id);
-  const L = document.createElement("link"); L.rel = "stylesheet";
-  L.href = "https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"; document.head.appendChild(L);
   const S = document.createElement("style");
-  S.textContent = `.rb,.rb *{font-family:'Roboto',sans-serif!important}
-  .lang-sw{display:flex;position:absolute;z-index:20;--ls:55px}
+  S.textContent = `.rb,.rb *,.admin-msg,.admin-msg *{font-family:'Nunito',sans-serif!important}.admin-msg{font-weight:900}
+  .lang-sw{display:flex;gap:8px;position:absolute;z-index:20;--ls:30px}
   .lang-btn{width:var(--ls);height:var(--ls);padding:0;border:2px solid #f1c40f;background:#000;cursor:pointer;overflow:hidden;position:relative;display:block}
-  .lang-btn:first-child{border-radius:14px 0 0 14px;border-right-width:1px}.lang-btn:last-child{border-radius:0 14px 14px 0;border-left-width:1px}
+  .lang-btn{border-radius:8px}
   .lang-btn img{width:100%;height:100%;object-fit:fill;display:block}
   .lang-btn span{display:none;position:absolute;inset:0;align-items:center;justify-content:center;background:#f1c40f;color:#000;font-size:calc(var(--ls)*.36);font-weight:700}
   .lang-btn:hover img{visibility:hidden}.lang-btn:hover span,.lang-btn.bad span{display:flex}
@@ -31,7 +29,7 @@
     return d;
   };
 
-  /* ---------- dictionnaire ---------- */
+  /* ---------- dictionnaire mdrrr ---------- */
   const EX = {
     "Latest spawn": "Dernière apparition", "Latest good spawn": "Dernière bonne apparition", "Best spawn": "Meilleure apparition",
     "INVENTORY": "INVENTAIRE", "Close ✖": "Fermer ✖", "Apples": "Pommes", "Luck Potions": "Potions de chance", "🏪 SHOP": "🏪 BOUTIQUE",
@@ -60,7 +58,7 @@
     "Username or email": "Nom d'utilisateur ou e-mail", "Password (6+ chars)": "Mot de passe (6 caractères min.)",
     "Invalid username": "Pseudo invalide", "Username already taken": "Pseudo déjà pris",
     "Choose a username (3-16: a-z, 0-9, _):": "Choisis un pseudo (3-16 : a-z, 0-9, _) :",
-    "Choose your username and profile picture": "Choisis ton pseudo et ta photo de profil", "Edit your profile picture": "Modifier ta photo de profil", "Choose your profile picture": "Choisis ta photo de profil",
+    "Choose your username and profile picture": "Choisis ton pseudo et ta photo de profil", "Edit your profile picture": "Modifier ta photo de profil", "Choose your profile picture": "Choisis ta photo de profil", "Autosell": "Vente auto", "Select apples to sell": "Sélectionner des pommes à vendre", "Select all": "Tout sélectionner", "Sell": "Vendre", "Apples selected are sold automatically when collected": "Les pommes sélectionnées sont vendues automatiquement quand tu les ramasses",
     "Username (3-16: a-z, 0-9, _)": "Pseudo (3-16 : a-z, 0-9, _)", "Profile picture URL (https://...)": "URL de la photo de profil (https://...)",
     "Continue": "Continuer", "Save": "Enregistrer", "Log out": "Se déconnecter", "Close": "Fermer", "Import my local progress": "Importer ma progression locale",
     "Invalid picture URL (must start with https://)": "URL de photo invalide (doit commencer par https://)"
@@ -133,7 +131,7 @@
   const hs = $("home-screen");
   if (hs) {
     const sw = makeLangSwitch();
-    sw.style.cssText = "top:calc(45*var(--u));right:calc(115*var(--u));--ls:calc(55*var(--u))";
+    sw.style.cssText = "top:calc(6*var(--u));left:calc(14*var(--u));--ls:calc(26*var(--u))";
     hs.appendChild(sw);
   }
   if (lang === "fr") setLang("fr");
