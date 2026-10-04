@@ -311,6 +311,11 @@
         const MY_CLIENT_ID = 'p_' + Math.random().toString(36).slice(2, 10);
         const ably = new Ably.Realtime({ key: 'bZFMkw.u1oLTg:xhXyW5SeGGYAmDyoGjYDfkbodtDNkZcEMXw11__DDxM', clientId: MY_CLIENT_ID });
         const channel = ably.channels.get('admin-commands');
+        // Presence : l'admin voit qui est connecté et dans quel mode ('menu' | 'arcade' | 'adventure')
+        function setMode(mode) {
+            try { channel.presence.update({ mode: mode }, function(err){ if (err) console.error('[Fast Collect] presence failed:', err.message || err); else console.log('[Fast Collect] presence OK as', MY_CLIENT_ID, '-', mode); }); } catch(e) { console.error(e); }
+        }
+        setMode('menu');
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
         const dvdCanvas = document.getElementById("dvdCanvas");
@@ -774,7 +779,7 @@
         resize(); updateDvdApple(); loadAllAccounts();
 
         function leaveGame() {
-            try { channel.presence.leave(null, function(){}); } catch(e) {}
+            setMode('menu');
             gameActive = false; if (gameSpawnInterval) { clearInterval(gameSpawnInterval); gameSpawnInterval = null; }
             apples = []; ball.speed = ball.baseSpeed; luckMultiplier = 1; setSpawnPanel(false); if (currentGameMode === "adventure") { saveAllAccounts(); }
             document.getElementById("home-screen").style.display = "flex";
@@ -785,7 +790,7 @@
         }
 
         function startGame() {
-            currentGameMode = "arcade"; luckMultiplier = 1; currentLuck = 0.05; setSpawnPanel(false); 
+            currentGameMode = "arcade"; luckMultiplier = 1; currentLuck = 0.05; setSpawnPanel(false); setMode('arcade'); 
             document.getElementById("home-screen").style.display = "none";
             document.getElementById("score").style.display = "block"; document.getElementById("timer-display").style.display = "block";
             document.getElementById("adventure-hud").style.display = "none"; document.getElementById("leave-game-btn").style.display = "flex"; document.getElementById("side-buttons").style.display = "none";
@@ -811,7 +816,7 @@
             update(); 
             if (gameSpawnInterval) clearInterval(gameSpawnInterval);
             gameSpawnInterval = setInterval(() => { if(gameActive && currentGameMode === "adventure") spawnApple(false, 1); }, 1000);
-            try { channel.presence.enter(null, function(){}); } catch(e) {}
+            setMode('adventure');
         }
 
         channel.unsubscribe();
