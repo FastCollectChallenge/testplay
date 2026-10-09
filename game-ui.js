@@ -3,7 +3,8 @@
   const $ = id => document.getElementById(id);
   const TITLE_LOGO = "https://raw.githubusercontent.com/FastCollectChallenge/play/main/Fast%20Collect%20Challenge%20Title%20logo.png";
   const LOGO = "https://raw.githubusercontent.com/FastCollectChallenge/play/main/Fast%20Collect%20Challenge%20Ingame%20logo.png";
-  const PRICE = { red: 1, green: 3, golden: 7, diamond: 15, candy: 50, lava: 200, galaxy: 500, dark: 1000, moony: 50000, salhini: 676767, bloodmoon: 6666666 };
+  const PRICE = { red: 1, green: 3, golden: 7, diamond: 15, candy: 50, lava: 200, galaxy: 500, dark: 1000, moony: 50000, salhini: 100000000, bloodmoon: 6666666 };
+  if (typeof NEW_APPLES !== "undefined") Object.keys(NEW_APPLES).forEach(k => { PRICE[k] = NEW_APPLES[k].price; });
   const css = document.createElement("style");
   css.textContent = `.nun,.nun *{font-family:'Nunito',sans-serif!important;font-weight:700!important}
   .logo-placeholder{border:none!important;background:none!important;padding:0!important}
@@ -85,7 +86,7 @@
   $("selall-btn").onclick = () => { const a = acc(); APPLE_ORDER.forEach(t => { if (a[APPLE_FIELDS[t]] > 0) selSet.add(t); }); decorate(); };
   $("bar-sell").onclick = () => {
     const a = acc(); if (!a || !selSet.size) return;
-    let gain = 0; selSet.forEach(t => { const f = APPLE_FIELDS[t]; gain += (a[f] || 0) * PRICE[t]; a[f] = 0; });
+    let gain = 0; selSet.forEach(t => { const f = APPLE_FIELDS[t]; if (!Number.isFinite(PRICE[t])) return; gain += (a[f] || 0) * PRICE[t]; a[f] = 0; });
     a.money += gain; exitSel(); saveAllAccounts();
   };
 
@@ -100,7 +101,7 @@
   document.body.appendChild(am);
   function renderAuto() {
     const g = $("auto-grid"), a = acc(); g.innerHTML = ""; if (!a) return;
-    APPLE_ORDER.forEach(t => {
+    APPLE_ORDER.filter(t => t !== 'salhini').forEach(t => {
       const on = !!(a.autosell && a.autosell[t]), c = document.createElement("div");
       c.className = "auto-card" + (on ? " on" : "");
       c.innerHTML = `<img src="${IMG_FRUITS[t]}"><div>${APPLE_NAMES[t]}</div><b>${on ? "ON" : "OFF"}</b>`;
@@ -113,13 +114,13 @@
   $("auto-close").onclick = closeAuto;
 
   let lastC = null, lastMoney = null;
-  const counts = a => { const c = {}; APPLE_ORDER.forEach(t => c[t] = a[APPLE_FIELDS[t]] || 0); return c; };
+  const counts = a => { const c = {}; APPLE_ORDER.filter(t => t !== 'salhini').forEach(t => c[t] = a[APPLE_FIELDS[t]] || 0); return c; };
   function autoTick() { // vend uniquement ce qui vient d'être collecté
     const a = acc(); if (!a) return;
     const cur = counts(a);
-    if (lastC) APPLE_ORDER.forEach(t => {
+    if (lastC) APPLE_ORDER.filter(t => t !== 'salhini').forEach(t => {
       const d = cur[t] - lastC[t];
-      if (d > 0 && a.autosell && a.autosell[t]) { a[APPLE_FIELDS[t]] -= d; a.money += d * PRICE[t]; cur[t] -= d; }
+      if (d > 0 && a.autosell && a.autosell[t] && Number.isFinite(PRICE[t])) { a[APPLE_FIELDS[t]] -= d; a.money += d * PRICE[t]; cur[t] -= d; }
     });
     lastC = cur;
   }
