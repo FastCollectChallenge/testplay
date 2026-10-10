@@ -9,7 +9,7 @@
     <style>
         * { font-family: 'Press Start 2P', cursive !important; font-synthesis: none; }
         /* Le panneau des spawns garde la police normale */
-        #spawn-panel, #spawn-panel * { font-family: 'Nunito', sans-serif !important; }
+        #spawn-panel, #spawn-panel *, .admin-msg { font-family: 'Nunito', sans-serif !important; }
         body { margin: 0; overflow: hidden; background-color: #000; font-weight: 500; user-select: none; }
         canvas { display: block; width: 100vw; height: 100vh; }
         
@@ -44,6 +44,14 @@
         .index-item-img { width: 100%; max-width: 110px; aspect-ratio: 1 / 1; object-fit: contain; }
         .index-item-img.locked { filter: brightness(0); opacity: 0.85; }
         .index-item-name { font-size: 12px; font-weight: 700; text-align: center; color: #f5f6fa; }
+        .apple-rarity { font-size: 7px; font-weight: 900; text-align: center; margin-top: -7px; letter-spacing: .4px; }
+        .inv-item-details { display:flex; flex-direction:column; gap:4px; min-width:0; }
+        .inv-item-name { font-size:8px; line-height:1.5; overflow-wrap:anywhere; }
+        .inv-item-rarity { font-size:6px; font-weight:900; }
+        .rarity-common { color:#145A32; } .rarity-rare { color:#3498DB; } .rarity-epic { color:#B45BDE; }
+        .rarity-godly { background:linear-gradient(90deg,#ff4242,#ffb52e,#fff15a,#47e66b,#48a9ff,#b75cff); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+        .rarity-secret { color:#fff; background:linear-gradient(90deg,#000 0%,#fff 50%,#000 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+        .rarity-admin { background:linear-gradient(90deg,#ff2626,#ffd21f); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
         
         /* Cartes d'items */
         .inv-item-card { background: rgba(255, 255, 255, 0.1); border: 2px solid rgba(255,255,255,0.15); border-radius: 25px; height: 90px; display: flex; align-items: center; justify-content: space-between; padding: 0 25px; position: relative; overflow: hidden; transition: background 0.2s, border-color 0.2s; cursor: pointer; }
@@ -91,7 +99,7 @@
 
         #msg-container-top { position: fixed; top: 60px; left: 0; width: 100%; display: flex; flex-direction: column; align-items: center; z-index: 10000; pointer-events: none; }
         #msg-container-bottom { position: fixed; bottom: 150px; left: 0; width: 100%; display: flex; flex-direction: column-reverse; align-items: center; z-index: 10000; pointer-events: none; }
-        .admin-msg { font-size: 26px; text-align: center; text-shadow: 2px 2px 10px rgba(0,0,0,0.9); margin: 5px 0; width: 100%; }
+        .admin-msg { font-family: 'Nunito', sans-serif !important; font-size: 14px; font-weight: 700; text-align: center; text-shadow: 2px 2px 10px rgba(0,0,0,0.9); margin: 5px 0; width: 100%; }
         .txt-violet { color: #A020F0; }
         .rainbow-text { background: linear-gradient(to right, #ff9999, #ffcc99, #ffff99, #99ff99, #99ccff, #cc99ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; display: inline-block; filter: drop-shadow(0px 0px 2px rgba(255,255,255,0.3)); }
         .galaxy-text { background: linear-gradient(to right, #ffb3ff, #b3f0ff, #e6b3ff, #ffffff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; display: inline-block; filter: drop-shadow(0px 0px 5px rgba(179,240,255,0.6)); }
@@ -456,12 +464,28 @@
         function openAccountModal() { document.getElementById("account-modal").style.display = "flex"; }
         function closeAccountModal() { document.getElementById("account-modal").style.display = "none"; }
 
+        // Dernière valeur valide connue par compte : si une valeur devient NaN, on la restaure au lieu de la mettre à 0
+        let lastGood = {};
+        function sanitizeAccount(acc, name) {
+            if (!acc || typeof acc !== 'object') return acc;
+            const fields = ['money','redApples','greenApples'];
+            Object.keys(acc).forEach(k => { if (/Apples$/.test(k) && !fields.includes(k)) fields.push(k); });
+            const good = name ? (lastGood[name] = lastGood[name] || {}) : {};
+            fields.forEach(f => {
+                if (Number.isFinite(acc[f])) good[f] = acc[f];
+                else acc[f] = Number.isFinite(good[f]) ? good[f] : 0;
+            });
+            return acc;
+        }
+
         function loadAllAccounts() {
             const savedAccounts = localStorage.getItem("fastCollect_accounts");
+            try { lastGood = JSON.parse(localStorage.getItem("fastCollect_lastGood") || "{}") || {}; } catch (e) { lastGood = {}; }
             const savedActive = localStorage.getItem("fastCollect_activeAccount");
             if (savedAccounts) {
                 let parsed = JSON.parse(savedAccounts);
                 Object.keys(parsed).forEach(k => {
+                    sanitizeAccount(parsed[k], k);
                     if (parsed[k].goldenApples === undefined) parsed[k].goldenApples = 0;
                     if (parsed[k].diamondApples === undefined) parsed[k].diamondApples = 0;
                     if (parsed[k].candyApples === undefined) parsed[k].candyApples = 0;
@@ -482,6 +506,8 @@
         }
 
         function saveAllAccounts() {
+            Object.keys(accounts).forEach(n => sanitizeAccount(accounts[n], n));
+            try { localStorage.setItem("fastCollect_lastGood", JSON.stringify(lastGood)); } catch (e) {}
             localStorage.setItem("fastCollect_accounts", JSON.stringify(accounts));
             localStorage.setItem("fastCollect_activeAccount", currentAccountName);
             updateAdventureHUD();
@@ -519,7 +545,7 @@
                 const decodedStr = decodeURIComponent(escape(atob(token.trim()))); const parsed = JSON.parse(decodedStr);
                 if(parsed.name && parsed.data) {
                     if(accounts[parsed.name]) { if(!confirm(`An account named "${parsed.name}" already exists here. Overwrite it?`)) return; }
-                    accounts[parsed.name] = parsed.data; currentAccountName = parsed.name; saveAllAccounts(); renderAccountSelect(); alert("Account imported successfully!");
+                    accounts[parsed.name] = sanitizeAccount(parsed.data, parsed.name); currentAccountName = parsed.name; saveAllAccounts(); renderAccountSelect(); alert("Account imported successfully!");
                 }
             } catch(e) { alert("Error reading key. Make sure you copied the full string."); }
         }
@@ -533,6 +559,7 @@
 
         function updateAdventureHUD() {
             const activeData = accounts[currentAccountName] || { money: 0, redApples: 0, greenApples: 0, goldenApples: 0, diamondApples: 0, candyApples: 0, lavaApples: 0, galaxyApples: 0, darkApples: 0, salhiniApples: 0, bloodmoonApples: 0, moonyApples: 0, potions: {} };
+            sanitizeAccount(activeData, currentAccountName);
             document.getElementById("inv-money-counter").innerText = fmtNum(activeData.money);
             document.getElementById("shop-money-counter").innerText = fmtNum(activeData.money);
             
@@ -558,7 +585,8 @@
                 itemTypes.forEach(item => {
                     if (item.count > 0) {
                         const card = document.createElement("div"); card.className = "inv-item-card";
-                        card.innerHTML = `<div class="inv-item-info"><img src="${item.content}" class="inv-item-icon-img" /><span class="inv-item-count">x${fmtNum(item.count)}</span></div><button class="sell-btn" onclick="event.stopPropagation(); openSellModal('${item.id}')">💱</button>`;
+                        const rarity = appleRarity(item.id);
+                        card.innerHTML = `<div class="inv-item-info"><img src="${item.content}" class="inv-item-icon-img" /><div class="inv-item-details"><span class="inv-item-name">${APPLE_NAMES[item.id] || NEW_APPLES[item.id]?.name || item.id}</span>${rarity ? `<span class="inv-item-rarity ${rarity.cls}">${rarity.name}</span>` : ''}<span class="inv-item-count">x${fmtNum(item.count)}</span></div></div><button class="sell-btn" onclick="event.stopPropagation(); openSellModal('${item.id}')">💱</button>`;
                         grid.appendChild(card);
                     }
                 });
@@ -605,13 +633,24 @@
             else { indexScreen.style.display = "none"; gameActive = true; update(); }
         }
 
+        function appleRarity(type) {
+            if (type === 'red' || type === 'green') return { name:'Common', cls:'rarity-common' };
+            if (type === 'golden' || type === 'diamond') return { name:'Rare', cls:'rarity-rare' };
+            if (['candy','lava','galaxy','dark'].includes(type)) return { name:'Epic', cls:'rarity-epic' };
+            if (['cheezy','sand'].includes(type)) return { name:'Godly Apple (Rainbow)', cls:'rarity-godly' };
+            if (['amethyst','ice','sapphire','rainbow','canneloni'].includes(type)) return { name:'Secret', cls:'rarity-secret' };
+            if (type === 'salhini') return { name:'Admin', cls:'rarity-admin' };
+            return null;
+        }
+
         function renderIndexGrid() {
             const grid = document.getElementById("index-grid"); grid.innerHTML = "";
             const activeData = accounts[currentAccountName] || {};
-            APPLE_ORDER.forEach(type => {
+            APPLE_ORDER.filter(type => type !== 'salhini').forEach(type => {
                 const discovered = (activeData.discovered && activeData.discovered[type]) || (activeData[APPLE_FIELDS[type]] > 0);
+                const rarity = appleRarity(type);
                 const card = document.createElement("div"); card.className = "index-item-card";
-                card.innerHTML = `<img class="index-item-img${discovered ? '' : ' locked'}" src="${IMG_FRUITS[type]}" alt="${APPLE_NAMES[type]}"><div class="index-item-name">${discovered ? APPLE_NAMES[type] : '???'}</div>`;
+                card.innerHTML = `<img class="index-item-img${discovered ? '' : ' locked'}" src="${IMG_FRUITS[type]}" alt="${APPLE_NAMES[type]}"><div class="index-item-name">${discovered ? APPLE_NAMES[type] : '???'}</div>${rarity ? `<div class="apple-rarity ${rarity.cls}">${rarity.name}</div>` : ''}`;
                 grid.appendChild(card);
             });
         }
@@ -703,7 +742,7 @@
             else if (type === 'lava') title.innerText = "Sell Lava Apples (+200$)";
             else if (type === 'galaxy') title.innerText = "Sell Galaxy Apples (+500$)";
             else if (type === 'dark') title.innerText = "Sell Dark Apples (+1K$)";
-            else if (type === 'salhini') title.innerText = "Sell Salhini Appelini (+676.8K$)";
+            else if (type === 'salhini') title.innerText = "Sell Salhini Appelini (+100M$)";
             else if (type === 'bloodmoon') title.innerText = "Sell Bloodmoon Apple (+6.7M$)";
             else if (type === 'moony') title.innerText = "Sell Moony Apple (+50K$)";
             if (NEW_APPLES[type]) title.innerText = `Sell ${NEW_APPLES[type].name} (+${fmtNum(NEW_APPLES[type].price)}$)`;
@@ -723,7 +762,7 @@
             else if (activeSellType === 'lava') { currentStock = activeData.lavaApples || 0; unitPrice = 200; }
             else if (activeSellType === 'galaxy') { currentStock = activeData.galaxyApples || 0; unitPrice = 500; }
             else if (activeSellType === 'dark') { currentStock = activeData.darkApples || 0; unitPrice = 1000; }
-            else if (activeSellType === 'salhini') { currentStock = activeData.salhiniApples || 0; unitPrice = 676767; }
+            else if (activeSellType === 'salhini') { currentStock = activeData.salhiniApples || 0; unitPrice = 100000000; }
             else if (activeSellType === 'bloodmoon') { currentStock = activeData.bloodmoonApples || 0; unitPrice = 6666666; }
             else if (activeSellType === 'moony') { currentStock = activeData.moonyApples || 0; unitPrice = 50000; }
 
@@ -734,6 +773,7 @@
                 let parsedInt = parseInt(inputVal); if (isNaN(parsedInt) || parsedInt <= 0) { alert("Please enter a valid amount or type 'Max'."); return; }
                 amountToSell = parsedInt > currentStock ? currentStock : parsedInt;
             }
+            if (!Number.isFinite(amountToSell) || !Number.isFinite(unitPrice)) { alert("Invalid amount."); closeSellModal(); return; }
             if (amountToSell <= 0) { alert("You don't have any apples of this kind to sell!"); closeSellModal(); return; }
 
             if (activeSellType === 'red') activeData.redApples -= amountToSell;
@@ -961,7 +1001,12 @@
                 } 
                 else if (currentGameMode === "adventure") {
                     let newType = null;
-                    if (!fG) { for (const id of Object.keys(NEW_APPLES)) { if (Math.random() < NEW_APPLES[id].chance * luckMultiplier) { newType = id; break; } } }
+                    // Chaque pomme rare fait son propre tirage : une chance élevée ne bloque plus
+                    // toutes les autres pommes derrière Cheezy dans l'ordre de la liste.
+                    if (!fG) {
+                        const eligible = Object.keys(NEW_APPLES).filter(id => Math.random() < Math.min(1, NEW_APPLES[id].chance * luckMultiplier));
+                        if (eligible.length) newType = eligible[Math.floor(Math.random() * eligible.length)];
+                    }
                     if (newType) { apples.push({ x: Math.random() * (canvas.width - 35), y: Math.random() * (canvas.height - 35), size: 32, type: newType }); newAppleMsg(newType); recordSpawn(newType); continue; }
                     let rng = Math.random();
                     let bloodmoonChance = 0.00000666 * luckMultiplier;
