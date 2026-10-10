@@ -31,6 +31,7 @@
 
   /* ---------- dictionnaire ---------- */
   const EX = {
+    "Enter the fuse machine": "Entrer dans la machine de fusion",
     "Latest spawn": "Dernière apparition", "Latest good spawn": "Dernière bonne apparition", "Best spawn": "Meilleure apparition",
     "INVENTORY": "INVENTAIRE", "Close ✖": "Fermer ✖", "Apples": "Pommes", "Luck Potions": "Potions de chance", "SHOP": "BOUTIQUE", "Language": "Langue",
     "Yes": "Oui", "No": "Non", "Confirm": "Confirmer", "Cancel": "Annuler", "Sell Apples": "Vendre des pommes",
