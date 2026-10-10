@@ -401,7 +401,7 @@ function openTrading(t) {
   curUnsub = onSnapshot(doc(db, "trades", t.id), s => {
     if (!s.exists()) return stopTrading();
     cur = { id: s.id, ...s.data() };
-    if (cur.status === "completed") { toastG(`Trade with @${other} completed!`); return stopTrading(); }
+    if (cur.status === "completed") { applyTrade({ id: cur.id }); toastG(`Trade with @${other} completed!`); return stopTrading(); }
     if (cur.status !== "accepted") { if (cur.cancelledBy !== me) toastG("@" + other + " cancelled the trade"); return stopTrading(); }
     renderTrading();
   });
