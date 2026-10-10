@@ -402,6 +402,12 @@
             rainbow:   { field:'rainbowApples',   name:'Rainbow Apple',   price:3000000,   chance:0.0000017,  color:'#ff66cc', msg:'A Rainbow Apple spawned in your server!', rainbow:true },
             canneloni: { field:'canneloniApples',name:'Apple Canneloni', price:250000000, chance:0.00000002, color:'#E4572E', msg:'An Apple Canneloni spawned in your server!' }
         };
+        // Déclarées juste après NEW_APPLES pour être initialisées avant le chargement des comptes/HUD.
+        const APPLE_ORDER = ['red', 'green', 'golden', 'diamond', 'candy', 'lava', 'galaxy', 'dark', 'cheezy', 'moony', 'sand', 'amethyst', 'ice', 'salhini', 'sapphire', 'rainbow', 'bloodmoon', 'canneloni'];
+        const APPLE_NAMES = { red: 'Red Apple', green: 'Green Apple', golden: 'Golden Apple', diamond: 'Diamond Apple', candy: 'Candy Apple', lava: 'Lava Apple', galaxy: 'Galaxy Apple', dark: 'Dark Apple', moony: 'Moony Apple', salhini: 'Salhini Appelini', bloodmoon: 'Bloodmoon Apple' };
+        const APPLE_FIELDS = { red: 'redApples', green: 'greenApples', golden: 'goldenApples', diamond: 'diamondApples', candy: 'candyApples', lava: 'lavaApples', galaxy: 'galaxyApples', dark: 'darkApples', moony: 'moonyApples', salhini: 'salhiniApples', bloodmoon: 'bloodmoonApples' };
+        Object.keys(NEW_APPLES).forEach(k => { APPLE_NAMES[k] = NEW_APPLES[k].name; APPLE_FIELDS[k] = NEW_APPLES[k].field; });
+
         function newAppleMsg(id) { const n = NEW_APPLES[id]; showAdvancedMsg(n.msg, 'bottom', n.rainbow ? {isRainbow:true} : {color:n.color}); }
 
         const IMG_POTIONS = {
@@ -950,10 +956,6 @@
 
         // ===== Panneau des spawns =====
         // Ordre des pommes, de la moins bonne à la meilleure. "Good spawn" = lava ou plus.
-        const APPLE_ORDER = ['red', 'green', 'golden', 'diamond', 'candy', 'lava', 'galaxy', 'dark', 'cheezy', 'moony', 'sand', 'amethyst', 'ice', 'salhini', 'sapphire', 'rainbow', 'bloodmoon', 'canneloni'];
-        const APPLE_NAMES = { red: 'Red Apple', green: 'Green Apple', golden: 'Golden Apple', diamond: 'Diamond Apple', candy: 'Candy Apple', lava: 'Lava Apple', galaxy: 'Galaxy Apple', dark: 'Dark Apple', moony: 'Moony Apple', salhini: 'Salhini Appelini', bloodmoon: 'Bloodmoon Apple' };
-        const APPLE_FIELDS = { red: 'redApples', green: 'greenApples', golden: 'goldenApples', diamond: 'diamondApples', candy: 'candyApples', lava: 'lavaApples', galaxy: 'galaxyApples', dark: 'darkApples', moony: 'moonyApples', salhini: 'salhiniApples', bloodmoon: 'bloodmoonApples' };
-        Object.keys(NEW_APPLES).forEach(k => { APPLE_NAMES[k] = NEW_APPLES[k].name; APPLE_FIELDS[k] = NEW_APPLES[k].field; });
         const GOOD_SPAWN_MIN_RANK = APPLE_ORDER.indexOf('lava');
         const LATEST_SPAWN_LIMIT = 2;      // "Latest spawn" : les 2 dernières pommes
         const LATEST_GOOD_SPAWN_LIMIT = 1; // "Latest good spawn" : 1 seule pomme
