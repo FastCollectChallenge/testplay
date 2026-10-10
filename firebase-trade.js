@@ -3,7 +3,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getAuth, onAuthStateChanged, signOut, signInAnonymously, signInWithEmailAndPassword,
   createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, GithubAuthProvider, linkWithCredential, signInWithCredential } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, getDoc, runTransaction, collection, query, where, onSnapshot,
-  addDoc, updateDoc, serverTimestamp, getDocs, documentId, limit, deleteField } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  addDoc, updateDoc, serverTimestamp, getDocs, documentId, limit, deleteField, arrayRemove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const app = initializeApp({
   apiKey: "AIzaSyDVkJX-VibTIhMp_WoTqQ6LzNOy7G5OwmY",
@@ -26,6 +26,7 @@ const APPLE_FIELDS = { red:'redApples', green:'greenApples', golden:'goldenApple
 const APPLE_NAMES = { red:'Red Apple', green:'Green Apple', golden:'Golden Apple', diamond:'Diamond Apple', candy:'Candy Apple', lava:'Lava Apple', galaxy:'Galaxy Apple', dark:'Dark Apple', moony:'Moony Apple', salhini:'Salhini Appelini', bloodmoon:'Bloodmoon Apple', cheezy:'Cheezy Apple', sand:'Sand Apple', amethyst:'Amethyst Apple', ice:'Ice Apple', sapphire:'Sapphire Apple', rainbow:'Rainbow Apple', canneloni:'Apple Canneloni' };
 const SHOP_PRODUCTS = [{id:'pot_x2_30',multiplier:2,duration:30},{id:'pot_x2_60',multiplier:2,duration:60},{id:'pot_x4_30',multiplier:4,duration:30},{id:'pot_x4_60',multiplier:4,duration:60},{id:'pot_x6_25',multiplier:6,duration:25},{id:'pot_x6_45',multiplier:6,duration:45},{id:'pot_x8_20',multiplier:8,duration:20},{id:'pot_x8_40',multiplier:8,duration:40},{id:'pot_x8_60',multiplier:8,duration:60},{id:'pot_x10_15',multiplier:10,duration:15},{id:'pot_x10_30',multiplier:10,duration:30}];
 const toast = m => showAdvancedMsg(T(m), "top", { color: "white" });
+const toastG = m => showAdvancedMsg(T(m), "top", { color: "#2ecc71" });
 
 let me = null, username = "", rev = 0, loaded = false, saving = false, dirty = false, saveTimer = null;
 let unsubs = [], pendingName = null, inbox = [], outbox = [], draft = { give: {}, ask: {} };
@@ -70,6 +71,13 @@ document.body.appendChild(boot);
 document.body.appendChild(ov);
 if (window.makeLangSwitch) { const w = makeLangSwitch(); w.style.cssText = "top:14px;left:16px"; ov.appendChild(w); }
 const err = e => $("au-err").textContent = (e && (e.code || e.message)) || String(e);
+  [/^Ready$/, "Prêt"], [/^Not ready$/, "Pas prêt"], [/^Invalid offer$/, "Offre invalide"],
+  [/^Press Ready when your offer is final$/, "Appuie sur Prêt quand ton offre est finale"],
+  [/^Waiting for (@\S+) to be ready\.\.\.$/, "En attente que $1 soit prêt..."],
+  [/^Waiting for (@\S+) to confirm\.\.\.$/, "En attente de la confirmation de $1..."],
+  [/^Both ready! Press Confirm$/, "Les deux sont prêts ! Appuie sur Confirmer"],
+  [/^Completing in (\d+)s\.\.\.$/, "Fin de l'échange dans $1s..."],
+  [/^Trade with (@\S+) completed!$/, "Échange avec $1 terminé !"],
 window.addEventListener("unhandledrejection", e => { console.error(e.reason); err(e.reason); });
 window.addEventListener("error", e => err(e.message));
 let mode = "login";
@@ -346,6 +354,10 @@ tw.innerHTML = `<div class="screen-header" style="margin-bottom:14px;padding-bot
 <div style="width:2px;background:rgba(255,255,255,.2)"></div>
 <div style="flex:1;display:flex;flex-direction:column;min-width:0;padding-left:14px"><div id="tw-their-title" style="font-size:16px;margin-bottom:10px;text-align:center"></div><div id="tw-theirs" class="tw-grid"></div></div></div>`;
 document.body.appendChild(tw);
+const twFoot = document.createElement("div");
+twFoot.style.cssText = "display:flex;align-items:center;justify-content:center;gap:12px;margin-top:14px";
+twFoot.innerHTML = `<div id="tw-state" style="font-size:14px;color:#ddd;text-align:center"></div><button id="tw-main" class="tr-send" style="padding:12px 22px;font-size:15px"></button><button id="tw-cancel" class="tr-send" style="padding:12px 22px;font-size:15px;background:#c23616;display:none">Cancel</button>`;
+tw.appendChild(twFoot);
 
 const am2 = document.createElement("div"); am2.id = "add-modal"; am2.className = "rb";
 am2.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:2100;display:none;align-items:center;justify-content:center;backdrop-filter:blur(2px)";
@@ -366,6 +378,7 @@ function twCard(type, qty, click) {
   c.append(n, im, q); if (click) c.onclick = click; return c;
 }
 function renderTrading() {
+  renderFooter();
   if (!cur) return;
   const other = cur.from === me ? cur.to : cur.from;
   const sig = JSON.stringify([cur.offers || {}, APPLE_ORDER.map(owned)]);
@@ -388,7 +401,8 @@ function openTrading(t) {
   curUnsub = onSnapshot(doc(db, "trades", t.id), s => {
     if (!s.exists()) return stopTrading();
     cur = { id: s.id, ...s.data() };
-    if (cur.status !== "accepted") { toast("@" + other + " cancelled the trade"); return stopTrading(); }
+    if (cur.status === "completed") { toastG(`Trade with @${other} completed!`); return stopTrading(); }
+    if (cur.status !== "accepted") { if (cur.cancelledBy !== me) toastG("@" + other + " cancelled the trade"); return stopTrading(); }
     renderTrading();
   });
   twTimer = setInterval(renderTrading, 1500);
@@ -411,9 +425,108 @@ am2.addEventListener("click", e => {
   setAdd(d === "none" ? 0 : d === "all" ? addMax : addQty + parseInt(d));
 });
 $("add-cancel").onclick = () => { am2.style.display = "none"; };
+/* ---------- Trade : Ready / Confirm / 5 s ---------- */
+const CD_MS = 5000, applying = new Set();
+let cdStart = 0, cdDone = false;
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const flag = (t, k, uid) => !!(t[k] && t[k][uid]);
+const lacking = o => Object.keys(o).find(t => owned(t) < o[t]);
+const offerOfDoc = (t, uid) => (t.offers && t.offers[uid]) || {};
+
+function renderFooter() {
+  if (!cur) return;
+  const other = cur.from === me ? cur.to : cur.from, on = cur.from === me ? cur.toName : cur.fromName;
+  const rMe = flag(cur, "ready", me), rOt = flag(cur, "ready", other), cMe = flag(cur, "confirm", me), cOt = flag(cur, "confirm", other);
+  const st = $("tw-state"), main = $("tw-main"), cn = $("tw-cancel");
+  cn.style.display = "none"; main.style.display = ""; main.style.background = "#27ae60";
+  if (cMe && cOt) { main.style.display = "none"; cn.style.display = ""; }
+  else if (cMe) { st.textContent = `Waiting for @${on} to confirm...`; main.textContent = "Cancel"; main.style.background = "#c23616"; main.dataset.a = "unconfirm"; }
+  else if (rMe && rOt) { st.textContent = "Both ready! Press Confirm"; main.textContent = "Confirm"; main.dataset.a = "confirm"; }
+  else if (rMe) { st.textContent = `Waiting for @${on} to be ready...`; main.textContent = "Not ready"; main.style.background = "#7f8c8d"; main.dataset.a = "unready"; }
+  else { st.textContent = "Press Ready when your offer is final"; main.textContent = "Ready"; main.dataset.a = "ready"; }
+}
+const tradeUpd = patch => updateDoc(doc(db, "trades", cur.id), patch).catch(e => toast(e.message));
+$("tw-main").onclick = () => {
+  if (!cur) return; const a = $("tw-main").dataset.a, other = cur.from === me ? cur.to : cur.from, mine = offerOfDoc(cur, me);
+  if (a === "ready") {
+    if (!Object.keys(mine).length && !Object.keys(offerOfDoc(cur, other)).length) return toast("Empty offer");
+    const l = lacking(mine); if (l) return toast("You don't have enough: " + APPLE_NAMES[l]);
+    tradeUpd({ [`ready.${me}`]: true });
+  } else if (a === "unready") tradeUpd({ [`ready.${me}`]: false, [`confirm.${me}`]: false });
+  else if (a === "confirm") {
+    const l = lacking(mine); if (l) return toast("You don't have enough: " + APPLE_NAMES[l]);
+    tradeUpd({ [`confirm.${me}`]: true });
+  } else if (a === "unconfirm") cancelConfirm();
+};
+$("tw-cancel").onclick = () => cancelConfirm();
+
+async function cancelConfirm() {
+  if (!cur) return; const id = cur.id; cdStart = 0;
+  try {
+    await runTransaction(db, async tx => {
+      const r = doc(db, "trades", id), t = (await tx.get(r)).data();
+      if (!t || t.status !== "accepted") return;
+      tx.update(r, { [`confirm.${me}`]: false, ok: {} });
+    });
+  } catch (e) { toast(e.message); }
+}
+
+setInterval(() => {
+  if (!cur || cur.status !== "accepted") { cdStart = 0; return; }
+  const other = cur.from === me ? cur.to : cur.from;
+  if (!(flag(cur, "confirm", me) && flag(cur, "confirm", other))) { cdStart = 0; return; }
+  if (!cdStart) { cdStart = Date.now(); cdDone = false; }
+  const left = Math.ceil((CD_MS - (Date.now() - cdStart)) / 1000);
+  if (left > 0) { $("tw-state").textContent = `Completing in ${left}s...`; return; }
+  if (!cdDone) { cdDone = true; markOk(cur.id); }
+}, 250);
+
+async function markOk(id) {
+  let short = null, bad = false;
+  try {
+    await runTransaction(db, async tx => {
+      short = null; bad = false;
+      const r = doc(db, "trades", id), t = (await tx.get(r)).data();
+      if (!t || t.status !== "accepted" || !flag(t, "confirm", t.from) || !flag(t, "confirm", t.to)) return;
+      const other = t.from === me ? t.to : t.from;
+      short = lacking(offerOfDoc(t, me));
+      if (short) { tx.update(r, { status: "cancelled", cancelledBy: me }); return; }
+      if (t.ok && t.ok[other]) {
+        const od = normalize(((await tx.get(doc(db, "users", other))).data() || {}).data), go = offerOfDoc(t, other);
+        if (Object.entries(go).some(([k, n]) => !APPLE_FIELDS[k] || !Number.isInteger(n) || n <= 0 || (od[APPLE_FIELDS[k]] || 0) < n)) { bad = true; tx.update(r, { status: "cancelled", cancelledBy: me }); return; }
+        tx.update(r, { ok: { ...t.ok, [me]: true }, status: "completed", unapplied: [t.from, t.to] });
+      } else tx.update(r, { ok: { ...(t.ok || {}), [me]: true } });
+    });
+    if (short) toast("You don't have enough: " + APPLE_NAMES[short]);
+    if (bad) toast("Invalid offer");
+  } catch (e) { toast(e.message); }
+}
+
+async function applyTrade(t) {
+  if (applying.has(t.id)) return; applying.add(t.id);
+  try {
+    for (let i = 0; saving && i < 50; i++) await sleep(200);
+    dirty = true; await saveNow();
+    await runTransaction(db, async tx => {
+      const tr = doc(db, "trades", t.id), ur = doc(db, "users", me);
+      const td = (await tx.get(tr)).data(), v = (await tx.get(ur)).data();
+      if (!td || !(td.unapplied || []).includes(me)) return;
+      const other = td.from === me ? td.to : td.from, d = normalize(v.data);
+      const give = offerOfDoc(td, me), get = offerOfDoc(td, other);
+      const valid = o => Object.entries(o).every(([k, n]) => APPLE_FIELDS[k] && Number.isInteger(n) && n > 0);
+      if (!valid(give) || !valid(get)) throw new Error("Invalid offer");
+      for (const [k, n] of Object.entries(give)) if ((d[APPLE_FIELDS[k]] || 0) < n) throw new Error("You don't have enough items");
+      for (const [k, n] of Object.entries(give)) d[APPLE_FIELDS[k]] -= n;
+      for (const [k, n] of Object.entries(get)) { d[APPLE_FIELDS[k]] = (d[APPLE_FIELDS[k]] || 0) + n; d.discovered[k] = true; }
+      tx.update(ur, { data: d, rev: v.rev + 1 });
+      tx.update(tr, { unapplied: arrayRemove(me) });
+    });
+  } catch (e) { toast(e.message); }
+  applying.delete(t.id);
+}
 $("add-ok").onclick = async () => {
   const id = cur && cur.id; am2.style.display = "none"; if (!id) return;
-  try { await updateDoc(doc(db, "trades", id), { [`offers.${me}.${addType}`]: addQty > 0 ? addQty : deleteField() }); }
+  try { await updateDoc(doc(db, "trades", id), { [`offers.${me}.${addType}`]: addQty > 0 ? addQty : deleteField(), ready: {}, confirm: {}, ok: {} }); }
   catch (e) { toast(e.message); }
 };
 
@@ -463,6 +576,9 @@ onAuthStateChanged(auth, async user => {
   manualLogout = false;
   try { if (!(await ensureProfile(user))) return; } catch (e) { err(e); ov.style.display = "flex"; return; }
   me = user.uid; beat(); const hb = setInterval(beat, 45000); unsubs.push(() => clearInterval(hb));
+    unsubs.push(onSnapshot(query(collection(db, "trades"), where("unapplied", "array-contains", me)), s => {
+    s.docs.forEach(d => { const t = { id: d.id, ...d.data() }; if (t.status === "completed") applyTrade(t); });
+  }));
   unsubs.push(onSnapshot(doc(db, "users", me), s => {
     if (!s.exists()) return; const v = s.data();
     if (!loaded || (!saving && v.rev > rev)) {
