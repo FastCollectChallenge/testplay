@@ -15,8 +15,8 @@
   /* ---------- styles ---------- */
   const css = document.createElement("style");
   css.textContent = `
-  #wf-map{position:fixed;left:0;top:0;z-index:-1;pointer-events:none;display:none;transform:rotate(-90deg);transform-origin:center;transition:filter .2s,transform .2s}
-  #wf-map.hot{filter:drop-shadow(0 0 14px #b47cff) drop-shadow(0 0 4px #fff);transform:rotate(-90deg) scale(1.06)}
+  #wf-map{position:fixed;left:0;top:0;z-index:-1;pointer-events:none;display:none;transition:filter .2s,transform .2s}
+  #wf-map.hot{filter:drop-shadow(0 0 14px #b47cff) drop-shadow(0 0 4px #fff);transform:scale(1.06)}
   #wf-prompt{position:fixed;z-index:30;pointer-events:none;display:none;align-items:center;gap:10px;padding:8px 12px 8px 8px;background:rgba(20,20,25,.85);border:2px solid rgba(255,255,255,.35);border-radius:12px;color:#fff;font-size:9px;line-height:1.4;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.45)}
   .wf-k{width:26px;height:26px;flex:none;border-radius:8px;border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:12px;background:rgba(255,255,255,.12)}
   #wf-video{position:fixed;inset:0;width:100vw;height:100vh;object-fit:cover;background:#000;z-index:9500;display:none;transition:opacity .45s}
@@ -59,11 +59,11 @@
   // machine à 90°, collée au bord droit, petite : on calcule sa boîte (avant rotation) pour que le bord visible touche le bord de l'écran
   function placeMap() {
     if (!map.naturalWidth) return;
-    const H = Math.round(Math.max(64, Math.min(120, window.innerHeight * 0.12)));
+    const H = Math.round(Math.max(64, Math.min(120, window.innerHeight * 0.18)));
     const W = Math.round(H * map.naturalWidth / map.naturalHeight);
-    const cx = window.innerWidth - H / 2, cy = window.innerHeight / 2;
+    const BOTTOM = 110; // distance au bas de l'écran
     map.style.width = W + "px"; map.style.height = H + "px";
-    map.style.left = (cx - W / 2) + "px"; map.style.top = (cy - H / 2) + "px";
+    map.style.left = (window.innerWidth - W - 20) + "px"; map.style.top = (window.innerHeight - H - BOTTOM) + "px";
   }
   map.onload = placeMap; window.addEventListener("resize", placeMap); if (map.complete) placeMap();
 
