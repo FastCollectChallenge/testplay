@@ -61,7 +61,7 @@
     if (!map.naturalWidth) return;
     const H = Math.round(Math.max(64, Math.min(120, window.innerHeight * 0.18)));
     const W = Math.round(H * map.naturalWidth / map.naturalHeight);
-    const BOTTOM = 110; // distance au bas de l'écran
+      const BOTTOM = 0; // collée en bas de l'écran hhh ça m'a prit tellement de temps je sais meme pas pourquoi j'écris ces commentaires ça sert à rien je ne veux meme pas que les gens cherchent dans mon code...
     map.style.width = W + "px"; map.style.height = H + "px";
     map.style.left = (window.innerWidth - W - 20) + "px"; map.style.top = (window.innerHeight - H - BOTTOM) + "px";
   }
