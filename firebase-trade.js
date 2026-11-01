@@ -1,4 +1,4 @@
-// firebase-trade.js : connexion (Firebase Auth uniquement) + API Cloudflare (économie, échanges)
+// accounts-database.js : connexion (Firebase Auth uniquement) + API Cloudflare (économie, échanges)
 // Le serveur est maître de tout : ce fichier n'envoie que des intentions (ramassé, vendre, acheter...) et affiche ce que le serveur renvoie.
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, onAuthStateChanged, onIdTokenChanged, signOut, signInAnonymously, signInWithEmailAndPassword,
