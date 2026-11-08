@@ -1,4 +1,4 @@
-// accounts-database.js : connexion (Firebase Auth uniquement) + API Cloudflare (économie, échanges)
+// firebase-trade.js : connexion (Firebase Auth uniquement) + API Cloudflare (économie, échanges)
 // Le serveur est maître de tout : ce fichier n'envoie que des intentions (ramassé, vendre, acheter...) et affiche ce que le serveur renvoie.
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, onAuthStateChanged, onIdTokenChanged, signOut, signInAnonymously, signInWithEmailAndPassword,
@@ -16,7 +16,7 @@ const app = initializeApp({
 const auth = getAuth(app);
 const $ = id => document.getElementById(id);
 const FAKE = "@fastcollect.app";
-const LOGO = "https://raw.githubusercontent.com/FastCollectChallenge/play/main/icons/Fast%20Collect%20Challenge%20NBG%20logo.png";
+const LOGO = "icons/Fast%20Collect%20Challenge.png";
 const clean = s => (s || "").trim().toLowerCase();
 const okName = s => /^[a-z0-9_]{3,16}$/.test(s);
 const T = s => (window.T ? window.T(s) : s);
@@ -25,7 +25,7 @@ const toast = m => showAdvancedMsg(T(m), "top", { color: "white" });
 const toastG = m => showAdvancedMsg(T(m), "top", { color: "#2ecc71" });
 const errMsg = e => { const m = String((e && e.message) || e); return /failed to fetch|networkerror|load failed/i.test(m) ? "Network error" : m.charAt(0).toUpperCase() + m.slice(1); };
 // APPLE_FIELDS, APPLE_NAMES, APPLE_ORDER, IMG_FRUITS, NEW_APPLES, SHOP_PRODUCTS... viennent d'index.html (portée globale)
-const BASE_PRICE = { red: 1, green: 3, golden: 7, diamond: 15, candy: 50, lava: 200, galaxy: 500, dark: 1000, moony: 50000, bloodmoon: 6666666, salhini: 100000000 };
+const BASE_PRICE = { red: 1, green: 3, golden: 15, diamond: 50, candy: 100, lava: 300, galaxy: 700, dark: 1000, moony: 25000, bloodmoon: 6666666, salhini: 100000000 };
 const priceOf = t => (NEW_APPLES[t] ? NEW_APPLES[t].price : BASE_PRICE[t]) || 0;
 
 let me = null, username = "", myPhoto = "", pendingName = null, manualLogout = false;
@@ -58,7 +58,7 @@ function credit(a, t) { // même règle que le serveur (affichage immédiat, le 
 }
 
 /* ---------- Adventure : apparitions fournies par le serveur ---------- */
-const adv = { on: false, run: 0, seq: -1, start: 0, lead: 0, spawns: [], bits: [], handled: [], unsent: [], rolling: false, syncing: false, timer: null, lastTry: 0, fails: 0, warned: false };
+const adv = { on: false, run: 0, seq: -1, start: 0, lead: 0, spawns: [], bits: [], handled: [], unsent: [], rolling: false, syncing: false, timer: null, lastTry: 0, fails: 0, warned: false, adm: new Set(), luckVer: -1, evTimer: null };
 const entryTime = j => adv.start + Math.max(0, j - adv.lead) * 1000;
 const sizeOf = t => (t === "red" || t === "green") ? 25 : t === "bloodmoon" ? 36 : 32;
 const maskStr = () => adv.bits.map(b => b ? "1" : "0").join("");
@@ -99,10 +99,25 @@ function announce(t) {
   else if (t === "moony") showAdvancedMsg("A Moony Apple spawned in your server!", "bottom", { stops: ["#BFC1C2", "#F8F8F8", "#9EA0A2", "#ECECEC"] });
   else if (NEW_APPLES[t]) newAppleMsg(t);
 }
+const codeSkip = {};
+function announceAdmin(t) { // pomme envoyée par l'admin
+  if (codeSkip[t] > 0) { codeSkip[t]--; return; }
+  const fr = "<span style='color: #ff3838; font-weight: 900;'>FelixRouge</span>";
+  if (t === "lava") showAdvancedMsg(fr + " spawned a Lava Apple in your server!", "bottom", { color: "#FF4D00" });
+  else if (t === "galaxy") showAdvancedMsg(fr + " spawned a Galaxy Apple in your server!", "bottom", { isGalaxy: true });
+  else if (t === "dark") showAdvancedMsg(fr + " spawned a Dark Apple in your server!", "bottom", { color: "black" });
+  else if (t === "bloodmoon" || t === "salhini" || t === "moony" || NEW_APPLES[t]) announce(t);
+  else showAdvancedMsg(fr + " spawned a " + (APPLE_NAMES[t] || t) + " in your server!", "bottom", { color: "white" });
+}
+function announceLuck(l) {
+  const left = Math.max(0, Math.round((l.until - srvNow()) / 1000));
+  if (typeof LUCK_IMAGES !== "undefined" && LUCK_IMAGES[l.mult]) showAdvancedMsg(`FelixRouge activated ${l.mult}x luck!`, "bottom", getLuckStyle(l.mult));
+  else showAdvancedMsg("<span style='color: #ff3838; font-weight: 900;'>FelixRouge</span> activated " + l.mult + "x luck" + (left ? " for " + fmtTime(left) : "") + "!", "bottom", { color: "white" });
+}
 function spawnEntry(j, live) {
   const type = adv.spawns[j], size = sizeOf(type), m = size === 25 ? 60 : 35;
   apples.push({ x: Math.random() * (canvas.width - m), y: Math.random() * (canvas.height - m), size, type, idx: j, advSeq: adv.seq });
-  recordSpawn(type); if (live) announce(type);
+  recordSpawn(type); if (live) (adv.adm.has(j) ? announceAdmin(type) : announce(type));
 }
 function advTick() {
   if (!adv.on || !gameActive || currentGameMode !== "adventure") return;
@@ -126,8 +141,8 @@ function applyPack(p) {
   const len = p.spawns.length, claimed = String(p.claimed || "").padEnd(len, "0");
   if (p.seq !== adv.seq) {
     const prev = adv.seq;
-    adv.seq = p.seq; adv.start = p.packStart; adv.lead = p.lead || 0; adv.spawns = p.spawns.slice();
-    adv.bits = Array.from({ length: len }, (_, i) => claimed[i] === "1");
+    adv.seq = p.seq; adv.start = p.packStart; adv.lead = p.lead || 0; adv.spawns = p.spawns.slice(); adv.adm = new Set(p.adm || []);
+    adv.bits = Array.from({ length: len }, (_, i) => claimed[i] != "0");
     adv.handled = new Array(len).fill(false);
     // les pommes encore à l'écran deviennent les pommes reportées du nouveau paquet
     const old = apples.filter(a => a.advSeq === prev && a.idx != null).sort((x, y) => x.idx - y.idx);
@@ -136,13 +151,16 @@ function applyPack(p) {
       else { const i = apples.indexOf(a); if (i >= 0) apples.splice(i, 1); }
     });
   } else { // même paquet : les apparitions à venir ont pu changer (potion de chance)
-    adv.spawns = p.spawns.slice();
-    for (let i = 0; i < len; i++) if (claimed[i] === "1") adv.bits[i] = true;
+    adv.spawns = p.spawns.slice(); adv.adm = new Set(p.adm || []);
+    for (let i = 0; i < len; i++) if (claimed[i] !== "0") adv.bits[i] = true;
   }
 }
 function showLuck(l) {
-  if (!l || !(l.mult > 1)) return;
-  const rem = Math.round((l.until - srvNow()) / 1000); if (rem <= 0) return;
+  const rem = l ? Math.round((l.until - srvNow()) / 1000) : 0;
+  if (!l || !(l.mult > 1) || rem <= 0) { // plus de chance : on retire le minuteur
+    if (activeTimers.luck) { clearInterval(activeTimers.luck.interval); const c = $("event-luck"); if (c) c.remove(); delete activeTimers.luck; }
+    return;
+  }
   if (activeTimers.luck) { if (Math.abs(activeTimers.luck.remaining - rem) <= 2) return; clearInterval(activeTimers.luck.interval); const c = $("event-luck"); if (c) c.remove(); delete activeTimers.luck; }
   const prod = SHOP_PRODUCTS.find(p => p.multiplier === l.mult);
   startHudTimer("luck", LUCK_IMAGES[l.mult] || (prod && IMG_POTIONS[prod.type]) || "", rem, "🍀", () => {});
@@ -154,6 +172,7 @@ async function advCallRaw(path, extra, next) {
     const p = await api(path, "POST", { ...extra, seq: adv.seq, mask: adv.seq < 0 ? null : maskStr(), next: !!next });
     adv.fails = 0; adv.warned = false;
     applyPack(p); showLuck(p.luck); if (p.trades) handleTrades(p.trades);
+    if (p.luck && p.luck.ver !== adv.luckVer) { const first = adv.luckVer === -1; adv.luckVer = p.luck.ver; if (!first && p.luck.mult > 1) announceLuck(p.luck); }
     return p;
   } catch (e) { adv.unsent = sent.concat(adv.unsent); adv.fails++; throw e; }
   finally { adv.rolling = false; }
@@ -176,7 +195,7 @@ const warnOv = document.createElement("div"); warnOv.id = "warn-ov";
 warnOv.innerHTML = `<div id="warn-box"></div>`;
 document.body.appendChild(warnOv);
 warnOv.addEventListener("mousedown", e => { if (e.target === warnOv && !banUntil) warnOv.style.display = "none"; }); // clic en dehors = ferme (impossible pendant un ban)
-const WLOGO = "https://raw.githubusercontent.com/FastCollectChallenge/play/main/icons/Fast%20Collect%20Challenge%20NBG%20logo.png";
+const WLOGO = "icons/Fast%20Collect%20Challenge.png";
 const WNAME = `<span class="wn"><img src="${WLOGO}" alt="">Fast Collect Challenge</span>`;
 let lastWarn = 0;
 let banUntil = 0, banTimer = null, srvOff = 0;
@@ -238,12 +257,22 @@ window.advCollect = a => {
   snap();
   updateAdventureHUD();
 };
+const EV_POLL_MS = 20000; // toutes les 20 s : y a-t-il une chance globale ou une pomme de l'admin ? (lecture seule, très léger)
+async function pollEvents() {
+  if (!adv.on || adv.syncing || adv.rolling || document.hidden || banUntil) return;
+  try {
+    const e = await api("/events");
+    if (!adv.on || (e.ver === adv.luckVer && !e.pending)) return;
+    await advCall("/sync", { refresh: true }, false);
+  } catch (err) { /* réessaie au prochain tour */ }
+}
+window.advPoll = pollEvents;
 window.advStart = async function () {
   advStop(false);
-  adv.on = true; adv.seq = -1; adv.spawns = []; adv.bits = []; adv.handled = []; adv.unsent = []; adv.fails = 0;
+  adv.on = true; adv.seq = -1; adv.spawns = []; adv.bits = []; adv.handled = []; adv.unsent = []; adv.fails = 0; adv.luckVer = -1; adv.adm = new Set();
   const my = ++adv.run;
   for (;;) {
-    try { await advCall("/sync", {}, false); break; }
+    try { await advCall("/sync", { join: true }, false); break; }
     catch (e) {
       if (!adv.on || my !== adv.run) return;
       if (!adv.warned) { adv.warned = true; toast("Server unavailable, retrying..."); }
@@ -252,10 +281,11 @@ window.advStart = async function () {
   }
   if (my !== adv.run) return;
   clearInterval(adv.timer); adv.timer = setInterval(advTick, 250); advTick();
+  clearInterval(adv.evTimer); adv.evTimer = setInterval(pollEvents, EV_POLL_MS);
 };
 function advStop(sendFinal) {
   const was = adv.on && adv.seq >= 0 && adv.unsent.length;
-  adv.on = false; adv.run++; clearInterval(adv.timer); adv.timer = null;
+  adv.on = false; adv.run++; clearInterval(adv.timer); adv.timer = null; clearInterval(adv.evTimer); adv.evTimer = null;
   if (sendFinal && was) api("/sync", "POST", { seq: adv.seq, mask: maskStr() }, { keepalive: true }).catch(() => {});
 }
 function beacon() { // fermeture de l'onglet : le serveur accepte la collecte partielle
@@ -264,7 +294,7 @@ function beacon() { // fermeture de l'onglet : le serveur accepte la collecte pa
 }
 document.addEventListener("visibilitychange", () => { if (document.hidden) beacon(); });
 window.addEventListener("pagehide", beacon);
-
+document.addEventListener("visibilitychange", () => { if (!document.hidden) pollEvents(); });
 /* ---------- actions d'économie (le serveur décide, l'écran suit) ---------- */
 window.saveAllAccounts = function () { updateAdventureHUD(); };
 const _leave = window.leaveGame;
@@ -306,10 +336,11 @@ window.confirmTransaction = function () {
   closeSellModal();
   act("/sell", { type: t, qty: n }, () => { a[f] -= n; a.money += n * priceOf(t); });
 };
-window.FC = { act, priceOf, srvNow, credit, refreshMe };
+window.FC = { act, priceOf, srvNow, credit, refreshMe, api };
 
 /* ---------- écran de connexion ---------- */
 const ov = document.createElement("div");
+ov.id = "auth-screen";
 ov.style.cssText = "position:fixed;inset:0;z-index:9000;background:#000;border:10px solid #f1c40f;box-sizing:border-box;display:none;align-items:center;color:#f1c40f";
 const sBtn = (id, img, txt) => `<button id="${id}" style="display:flex;align-items:center;gap:14px;width:100%;padding:10px 20px;border:0;border-radius:50px;background:#fff;color:#222;font-size:15px;font-weight:500;cursor:pointer"><img src="${img}" style="width:28px;height:28px;border-radius:50%;object-fit:contain"><span>${txt}</span></button>`;
 const inp = "width:100%;box-sizing:border-box;padding:13px 16px;border-radius:12px;border:2px solid #f1c40f;background:#111;color:#fff;font-size:15px";
@@ -318,9 +349,10 @@ ov.innerHTML = `<div style="width:48%;padding:0 3%;box-sizing:border-box;display
 <div class="rb" style="width:52%;display:flex;justify-content:center"><div style="width:360px;display:flex;flex-direction:column;gap:14px">
 <input id="au-name" style="${inp}" placeholder="Username or email"><input id="au-pw" type="password" style="${inp}" placeholder="Password (6+ chars)">
 <button id="au-main" style="padding:13px;border:0;border-radius:50px;background:#f1c40f;color:#000;font-size:15px;font-weight:700;cursor:pointer">Log in</button>
-<div id="au-social" style="display:flex;flex-direction:column;gap:14px">${sBtn("au-google", "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/3840px-Google_%22G%22_logo.svg.png?utm_source=fr.wikipedia.org&utm_campaign=index&utm_content=thumbnail", "Log-in with Google")}${sBtn("au-github", "https://cdn-icons-png.flaticon.com/512/25/25231.png", "Log-in with Github")}<a id="au-guest" href="#" style="color:#aaa;text-align:center;font-size:13px">Play as guest</a></div>
+<div id="au-social" style="display:flex;flex-direction:column;gap:14px">${sBtn("au-google", "https://png.pngtree.com/png-vector/20230817/ourmid/pngtree-google-logo-vector-png-image_9183290.png", "Log-in with Google")}${sBtn("au-github", "https://cdn-icons-png.flaticon.com/512/25/25231.png", "Log-in with Github")}<a id="au-guest" href="#" style="color:#aaa;text-align:center;font-size:13px">Play as guest</a></div>
 <div id="au-err" style="color:#ff6b6b;font-size:13px;min-height:16px;text-align:center"></div></div></div>`;
 const boot = document.createElement("div"); // écran de chargement pendant la connexion automatique
+boot.id = "boot-screen";
 boot.style.cssText = "position:fixed;inset:0;z-index:8999;background:#000;border:10px solid #f1c40f;box-sizing:border-box;display:flex;align-items:center;justify-content:center";
 boot.innerHTML = `<img src="${LOGO}" style="width:140px;height:140px;object-fit:contain">`;
 document.body.appendChild(boot);
@@ -368,14 +400,14 @@ $("au-github").onclick = () => social(GithubAuthProvider);
 $("au-guest").onclick = e => { e.preventDefault(); signInAnonymously(auth).catch(err); };
 
 /* ---------- profil ---------- */
-const AV0 = "https://raw.githubusercontent.com/FastCollectChallenge/play/main/icons/Fast%20Collect%20Challenge%20NBG%20logo.png";
+const AV0 = "icons/Fast%20Collect%20Challenge.png";
 const pf = document.createElement("div"); pf.id = "profile-page";
 pf.style.cssText = "position:fixed;inset:0;z-index:9100;background:#000;border:10px solid #f1c40f;box-sizing:border-box;display:none;align-items:center;color:#f1c40f";
 pf.innerHTML = `<div style="width:48%;padding:0 3%;box-sizing:border-box;display:flex;flex-direction:row;align-items:center;gap:24px"><img src="${LOGO}" style="width:120px;height:120px;object-fit:contain;flex:none"><div style="font-size:40px;line-height:1.5;text-transform:uppercase;text-shadow:4px 4px 0 #333">Fast Collect Challenge</div></div>
 <div class="rb" style="width:52%;display:flex;justify-content:center"><div style="width:380px;display:flex;flex-direction:column;gap:14px">
 <div id="pf-title" style="font-size:22px;font-weight:700;color:#fff;text-align:center;line-height:1.3"></div>
 <div style="display:flex;justify-content:center"><img id="pf-prev" style="width:110px;height:110px;border-radius:50%;object-fit:cover;border:3px solid #f1c40f;background:#222"></div>
-<input id="pf-name" style="${inp}" placeholder="Username (3-16: a-z, 0-9, _)"><input id="pf-photo" style="${inp}" placeholder="Profile picture URL (https://...)">
+<input id="pf-name" style="${inp}" placeholder="Username (3-16: a-z, 0-9, _)"><input id="pf-photo" style="${inp}" placeholder="Profile picture URL (https://...)"><a id="pf-upload" href="https://image-hoster.fastcollectchallenge.com" target="_blank" rel="noopener" style="padding:13px;border-radius:50px;color:#fff;font-size:15px;font-weight:700;text-align:center;text-decoration:none;cursor:pointer">Upload</a>
 <div id="pf-lang" style="display:none;align-items:center;justify-content:center;gap:12px;color:#ddd;font-size:14px"><span>Language</span></div>
 <button id="pf-ok" style="padding:13px;border:0;border-radius:50px;background:#f1c40f;color:#000;font-size:15px;font-weight:700;cursor:pointer"></button>
 <a id="pf-close" href="#" style="color:#ddd;text-align:center;font-size:13px">Close</a><a id="pf-out" href="#" style="color:#aaa;text-align:center;font-size:13px">Log out</a>
@@ -621,7 +653,7 @@ function renderTrading() {
   if (sig === sigLast) return; sigLast = sig;
   const mine = $("tw-mine"), theirs = $("tw-theirs"); mine.innerHTML = ""; theirs.innerHTML = "";
   const hint = m => `<div class="tw-hint">${m}</div>`;
-  APPLE_ORDER.forEach(t => { if (owned(t) > 0 || (cur.mine[t] || 0) > 0) mine.appendChild(twCard(t, cur.mine[t] || 0, () => openAdd(t))); });
+  APPLE_ORDER.forEach(t => { if (t === "tenth") return; /* 10th Update Apple : intradable */ if (owned(t) > 0 || (cur.mine[t] || 0) > 0) mine.appendChild(twCard(t, cur.mine[t] || 0, () => openAdd(t))); });
   if (!mine.children.length) mine.innerHTML = hint("You have no apples");
   APPLE_ORDER.forEach(t => { if ((cur.theirs[t] || 0) > 0) theirs.appendChild(twCard(t, cur.theirs[t])); });
   if (!theirs.children.length) theirs.innerHTML = hint("Nothing yet");
@@ -756,3 +788,43 @@ onAuthStateChanged(auth, async user => {
 
 // interface du jeu (logos, popups sans pause, autosell...) : chargée automatiquement
 if (!window.__gameUI) { window.__gameUI = true; const g = document.createElement("script"); g.src = "game-ui.js"; document.head.appendChild(g); }
+if (!window.__gambleUI) { window.__gambleUI = true; const g2 = document.createElement("script"); g2.src = "gambling-ui.js"; document.head.appendChild(g2); }
+
+/* ---------- Codes ---------- */
+const codeCss = document.createElement("style"); // même style que le bouton Gamble, juste en dessous
+codeCss.textContent = `#code-btn{position:absolute!important;top:168px;left:84px;background:rgb(255,255,255)}
+#code-btn .side-btn-label{color:#677f85;font-size:10px!important}
+#code-btn img{filter:url(#fc-tint)!important;opacity:1}`;
+document.head.appendChild(codeCss);
+const sbar = $("side-buttons");
+const codeBtn = document.createElement("button"); codeBtn.id = "code-btn"; codeBtn.className = "side-btn";
+codeBtn.innerHTML = '<img src="icons/Code Dark Mode.png" alt="Codes" onerror="this.style.display=\'none\';this.parentNode.classList.add(\'no-img\')"><span class="side-btn-label">Codes</span>';
+sbar.appendChild(codeBtn);
+
+const cdOv = document.createElement("div"); cdOv.className = "rb";
+cdOv.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:2100;display:none;align-items:center;justify-content:center;backdrop-filter:blur(2px)";
+cdOv.innerHTML = `<div style="width:min(360px,92vw);background:#000;border:1px solid #333;border-radius:8px;padding:18px;color:#fff;display:flex;flex-direction:column;gap:12px;box-sizing:border-box"><div style="font-size:18px;text-align:center">Enter a code</div><input id="code-input" autocomplete="off" maxlength="32" placeholder="CODE" style="height:42px;padding:0 12px;background:#000;border:1px solid #fff;border-radius:3px;color:#fff;font-size:15px;outline:none;text-transform:uppercase"><button id="code-ok" class="tr-send" style="padding:12px;font-size:15px">Redeem</button></div>`;
+document.body.appendChild(cdOv);
+cdOv.onmousedown = e => { if (e.target === cdOv) cdOv.style.display = "none"; };
+codeBtn.onclick = () => {
+  ["inventory-screen", "shop-screen", "index-screen", "trade-screen"].forEach(i => { const e = $(i); if (e) e.style.display = "none"; });
+  if (window.toggleGamble) window.toggleGamble(false);
+  cdOv.style.display = "flex"; $("code-input").value = ""; $("code-input").focus();
+};
+new MutationObserver(() => { if (sbar.style.display === "none") cdOv.style.display = "none"; }).observe(sbar, { attributes: true, attributeFilter: ["style"] });
+function redeemCode() {
+  const code = $("code-input").value.trim(); if (!code) return;
+  cdOv.style.display = "none";
+  act("/redeem", { code }).then(r => {
+    const nm = APPLE_NAMES[r.type] || r.type, q = r.qty > 1 ? r.qty + "x " : "";
+    if (r.kind === "money") toastG("You got $" + fmtNum(r.qty) + " !");
+    else if (r.kind === "inv") toastG(q + nm + " added to your inventory!");
+    else {
+      toastG(q + nm + " spawned!");
+      codeSkip[r.type] = (codeSkip[r.type] || 0) + r.qty;
+      advCall("/sync", { refresh: true }, false).catch(() => {});
+    }
+  }).catch(() => {}); // les erreurs ("Code sold out", "Invalid code"...) sont déjà affichées par act()
+}
+$("code-ok").onclick = redeemCode;
+$("code-input").onkeydown = e => { if (e.key === "Enter") redeemCode(); };

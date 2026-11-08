@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How to play - Fast Collect Challenge</title>
+    <link rel="icon" href="https://raw.githubusercontent.com/FastCollectChallenge/play/main/icons/Favicon.png">
+    <style>
+        @font-face { font-family: 'Google Sans'; src: url('/GoogleSans.ttf') format('truetype'); font-weight: 100 900; font-display: swap; }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0; padding: 30px 15px; display: flex; justify-content: center; min-height: 100vh;
+            font-family: 'Google Sans', system-ui, -apple-system, 'Segoe UI', sans-serif; line-height: 1.7; color: #e8ecf4;
+            background: radial-gradient(1200px 700px at 15% 10%, rgba(124,92,255,.22), transparent 60%), radial-gradient(900px 600px at 90% 90%, rgba(34,211,238,.16), transparent 60%), linear-gradient(180deg, #0a0d14, #0d1220) fixed;
+        }
+        .container {
+            width: 100%; max-width: 820px; margin: 20px auto; padding: 40px; position: relative;
+            background: linear-gradient(145deg, rgba(255,255,255,.07), rgba(255,255,255,.02));
+            border: 1px solid rgba(255,255,255,.10); border-radius: 24px;
+            box-shadow: 0 20px 50px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.06); backdrop-filter: blur(14px);
+        }
+        .logo { position: absolute; top: 36px; right: 40px; width: 64px; height: 64px; object-fit: contain; }
+        .title-row { display: flex; align-items: center; flex-wrap: wrap; gap: 14px 16px; margin: 0 90px 24px 0; }
+        h1 {
+            margin: 0; font-size: 32px; font-weight: 800; letter-spacing: -.03em; line-height: 1.2; margin-right: 6px;
+            background: linear-gradient(90deg, #fff, #a5b4fc 50%, #67e8f9); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .pill {
+            position: relative; display: inline-block; padding: 5px 16px; border: 0; border-radius: 999px; cursor: pointer;
+            font: 800 16px/1.2 'Google Sans', system-ui, sans-serif; letter-spacing: -.03em; text-decoration: none;
+            background: linear-gradient(90deg, #fff, #a5b4fc 50%, #67e8f9); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+            transition: filter .2s ease;
+        }
+        .pill::before {
+            content: ""; position: absolute; inset: 0; padding: 1px; border-radius: inherit; pointer-events: none;
+            background: linear-gradient(90deg, #fff, #a5b4fc 50%, #67e8f9);
+            -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+            mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask-composite: exclude;
+        }
+        .pill:hover { filter: brightness(1.2); }
+        .pill:focus-visible { outline: 2px solid #a5b4fc; outline-offset: 4px; }
+        h2 { margin-top: 34px; padding-bottom: 8px; font-size: 18px; font-weight: 700; color: #a5b4fc; border-bottom: 1px solid rgba(124,92,255,.5); }
+        p, li { font-size: 15px; color: #c7cedd; }
+        strong { color: #e8ecf4; }
+        ul, ol { padding-left: 22px; }
+        li { margin-bottom: 8px; }
+        li::marker { color: #7c5cff; }
+        .tip { padding: 14px 18px; border-radius: 16px; background: rgba(124,92,255,.12); border: 1px solid rgba(124,92,255,.35); }
+        .scroll { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th { padding: 10px 12px; text-align: left; background: rgba(124,92,255,.2); color: #e8ecf4; font-size: 12px; }
+        td { padding: 9px 12px; color: #c7cedd; border-bottom: 1px solid rgba(255,255,255,.08); }
+        tr:hover td { background: rgba(124,92,255,.10); }
+        .common { color: #4ade80; } .rare { color: #3498db; } .epic { color: #b45bde; } .godly { color: #f1c40f; } .secret { color: #e8ecf4; } .admin { color: #ef4444; }
+        .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,.12); font-size: 13px; color: #94a3b8; text-align: center; }
+        @media (max-width: 600px) {
+            .container { padding: 28px 22px; }
+            .logo { top: 24px; right: 22px; width: 52px; height: 52px; }
+            .title-row { margin-right: 70px; }
+            h1 { font-size: 26px; }
+            .pill { font-size: 14px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <img src="https://raw.githubusercontent.com/FastCollectChallenge/play/main/icons/Fast%20Collect%20Challenge%20NBG%20logo.png" alt="Fast Collect Challenge Logo" class="logo">
+
+    <div class="title-row">
+        <h1 data-fr="Comment jouer">How to play</h1>
+        <a class="pill" href="/" data-fr="Retour au jeu">Return to the game</a>
+        <button class="pill" id="lang" type="button">Français</button>
+    </div>
+
+    <h2 data-fr="1. Le but du jeu">1. The goal</h2>
+    <p data-fr="Déplace ta souris pour guider la balle et attraper les pommes qui apparaissent. Plus une pomme est rare, plus elle vaut cher.">Move your mouse to guide the ball and catch the apples that appear. The rarer an apple is, the more it is worth.</p>
+
+    <h2 data-fr="2. Les deux modes">2. The two modes</h2>
+    <ul>
+        <li data-fr="<strong>Mode Arcade :</strong> tu as 60 secondes pour marquer un maximum de points. Une pomme rouge vaut 1 point et une pomme verte 3 points."><strong>Arcade mode:</strong> you have 60 seconds to score as many points as possible. A red apple is worth 1 point and a green apple 3 points.</li>
+        <li data-fr="<strong>Mode Aventure :</strong> pas de limite de temps. Les pommes ramassées vont dans ton inventaire et s'inscrivent dans l'Index. Tu peux les vendre, acheter des potions, échanger avec d'autres joueurs et fusionner des pommes."><strong>Adventure mode:</strong> no time limit. Collected apples go to your inventory and are recorded in the Index. You can sell them, buy potions, trade with other players, and fuse apples.</li>
+    </ul>
+
+    <h2 data-fr="3. Vendre tes pommes">3. Selling your apples</h2>
+    <ol>
+        <li data-fr="Ouvre l'<strong>Inventaire</strong> avec le bouton sur le côté de l'écran.">Open the <strong>Inventory</strong> with the button on the side of the screen.</li>
+        <li data-fr="Appuie sur <strong>Vendre</strong> sur une pomme, puis choisis la quantité avec les boutons -1, -3, -5, -10, Aucun, +1, +3, +5, +10 et Tout.">Press <strong>Sell</strong> on an apple, then choose the quantity with the -1, -3, -5, -10, None, +1, +3, +5, +10 and All buttons.</li>
+        <li data-fr="Avec <strong>Sélectionner des pommes à vendre</strong>, tu peux en choisir plusieurs d'un coup, ou tout sélectionner.">With <strong>Select apples to sell</strong> you can pick several at once, or select them all.</li>
+        <li data-fr="<strong>Vente auto</strong> vend automatiquement les pommes que tu choisis dès que tu les ramasses.">Use <strong>Autosell</strong> to automatically sell the apples you choose as soon as you collect them.</li>
+    </ol>
+
+    <h2 data-fr="4. Les pommes">4. The apples</h2>
+    <div class="scroll">
+        <table>
+            <thead><tr><th data-fr="Pomme">Apple</th><th data-fr="Rareté">Rarity</th><th data-fr="Prix de vente">Sell price</th></tr></thead>
+            <tbody>
+                <tr><td>Red Apple</td><td class="common">Common</td><td>$1</td></tr>
+                <tr><td>Green Apple</td><td class="common">Common</td><td>$3</td></tr>
+                <tr><td>Golden Apple</td><td class="rare">Rare</td><td>$15</td></tr>
+                <tr><td>Diamond Apple</td><td class="rare">Rare</td><td>$50</td></tr>
+                <tr><td>Candy Apple</td><td class="epic">Epic</td><td>$100</td></tr>
+                <tr><td>Lava Apple</td><td class="epic">Epic</td><td>$300</td></tr>
+                <tr><td>Galaxy Apple</td><td class="epic">Epic</td><td>$700</td></tr>
+                <tr><td>Dark Apple</td><td class="epic">Epic</td><td>$1,000</td></tr>
+                <tr><td>Cheezy Apple</td><td class="godly">Godly</td><td>$5,000</td></tr>
+                <tr><td>Skull Apple</td><td class="godly">Godly</td><td>$20,000</td></tr>
+                <tr><td>Moony Apple</td><td class="godly">Godly</td><td>$25,000</td></tr>
+                <tr><td>Sand Apple</td><td class="godly">Godly</td><td>$50,000</td></tr>
+                <tr><td>Poisoned Apple</td><td class="godly">Godly</td><td>$70,000</td></tr>
+                <tr><td>Frostfire Apple</td><td class="godly">Godly</td><td>$150,000</td></tr>
+                <tr><td>Elixir Apple</td><td class="secret">Secret</td><td>$275,000</td></tr>
+                <tr><td>Amethyst Apple</td><td class="secret">Secret</td><td>$250,000</td></tr>
+                <tr><td>Ice Apple</td><td class="secret">Secret</td><td>$600,000</td></tr>
+                <tr><td>Corrupted Apple</td><td class="secret">Secret</td><td>$600,000</td></tr>
+                <tr><td>Sapphire Apple</td><td class="secret">Secret</td><td>$1,250,000</td></tr>
+                <tr><td>Ghost Apple</td><td class="secret">Secret</td><td>$2,300,000</td></tr>
+                <tr><td>Rainbow Apple</td><td class="secret">Secret</td><td>$3,000,000</td></tr>
+                <tr><td>Bloodmoon Apple</td><td class="secret">Secret</td><td>$6,666,666</td></tr>
+                <tr><td>Pumpkini Applini</td><td class="secret">Secret</td><td>$32,000,000</td></tr>
+                <tr><td>Apple Canneloni</td><td class="secret">Secret</td><td>$250,000,000</td></tr>
+                <tr><td>Sun Apple</td><td class="secret">Secret</td><td>$170,000,000</td></tr>
+                <tr><td>Salhini Appelini</td><td class="admin">Admin</td><td>$100,000,000</td></tr>
+            </tbody>
+        </table>
+    </div>
+    <p data-fr="L'<strong>Index</strong> garde la trace de chaque pomme que tu as trouvée.">The <strong>Index</strong> keeps track of every apple you have found.</p>
+
+    <h2 data-fr="5. La boutique et les potions de chance">5. The shop and luck potions</h2>
+    <p data-fr="Dans la <strong>Boutique</strong>, tu peux acheter des potions qui multiplient ta chance de trouver des pommes rares, de x2 à x30, pendant 5 à 60 secondes. Les prix vont de $1,000 à $150,000. Tu peux aussi revendre une potion depuis l'inventaire et récupérer 80 % de son prix.">In the <strong>Shop</strong> you can buy potions that multiply your luck of finding rare apples, from x2 to x30, for 5 to 60 seconds. Prices range from $1,000 to $150,000. You can also resell a potion from your inventory and get 80% of its price back.</p>
+
+    <h2 data-fr="6. Échanger avec d'autres joueurs">6. Trading with other players</h2>
+    <ol>
+        <li data-fr="Ouvre <strong>Échange</strong> et cherche un joueur par son pseudo.">Open <strong>Trade</strong> and search for a player by username.</li>
+        <li data-fr="Envoie une demande d'échange. L'autre joueur doit être en ligne et l'accepter.">Send a trade request. The other player must be online and accept it.</li>
+        <li data-fr="Chacun ajoute les pommes qu'il veut donner à son offre.">Each of you adds the apples you want to give to your offer.</li>
+        <li data-fr="Quand ton offre est finale, appuie sur <strong>Prêt</strong>. Quand vous êtes tous les deux prêts, appuyez sur <strong>Confirmer</strong>.">When your offer is final, press <strong>Ready</strong>. When you are both ready, press <strong>Confirm</strong>.</li>
+        <li data-fr="L'échange se termine après un court compte à rebours.">The trade completes after a short countdown.</li>
+    </ol>
+
+    <h2 data-fr="7. La fusion de la sorcière">7. The Witch Fuse</h2>
+    <p data-fr="Entre dans la machine à fusion de la sorcière, place 4 pommes dedans, puis appuie sur <strong>Fusionner</strong>. Tu peux obtenir une pomme spéciale, ou rien du tout. Les recettes sont secrètes : à toi de les découvrir.">Enter the witch's fuse machine, place 4 apples inside, then press <strong>Fuse</strong>. You may get a special apple, or nothing at all. The recipes are secret: it is up to you to discover them.</p>
+
+    <h2 data-fr="8. Ton compte">8. Your account</h2>
+    <ul>
+        <li data-fr="Connecte-toi ou inscris-toi avec un pseudo et un mot de passe, avec Google, ou avec GitHub. Ta progression est alors sauvegardée en ligne.">Log in or sign up with a username and password, with Google, or with GitHub. Your progress is then saved online.</li>
+        <li data-fr="Tu peux aussi <strong>jouer en invité</strong>. Ta progression reste alors sur cet appareil, et tu pourras l'importer dans un compte plus tard.">You can also <strong>play as a guest</strong>. Your progress then stays on this device, and you can import it into an account later.</li>
+        <li data-fr="Dans les paramètres du compte, tu peux changer ta photo de profil. Utilise le bouton <strong>Importer</strong> pour héberger une image, puis colle son adresse.">In the account settings you can change your profile picture. Use the <strong>Upload</strong> button to host an image, then paste its address.</li>
+    </ul>
+
+    <h2 data-fr="9. Les événements en direct">9. Live events</h2>
+    <p data-fr="Pendant que tu joues, des messages en haut de l'écran annoncent des événements pour tous les joueurs : chance globale, <strong>Temps vert</strong> (plus de pommes vertes), <strong>Points doublés</strong>, ou apparition de pommes spéciales sur ton serveur.">While you play, messages at the top of the screen announce events for all players: global luck, <strong>Green Time</strong> (more green apples), <strong>Double Points</strong>, or special apples spawning on your server.</p>
+
+    <h2 data-fr="10. Conseils">10. Tips</h2>
+    <div class="tip">
+        <ul>
+            <li data-fr="Active une potion de chance avant de chasser les pommes rares.">Activate a luck potion before hunting for rare apples.</li>
+            <li data-fr="Mets les pommes communes en vente auto pour ne pas perdre de temps.">Put common apples on autosell so you do not waste time.</li>
+            <li data-fr="Connecte-toi à un compte pour ne jamais perdre ta progression.">Log in to an account so you never lose your progress.</li>
+        </ul>
+    </div>
+
+    <div class="footer">&copy; 2026 Fast Collect Challenge. All rights reserved. Created by FelixRouge from StackInc.</div>
+
+</div>
+
+<script>
+    const nodes = [...document.querySelectorAll("[data-fr]")];
+    nodes.forEach(n => { n.dataset.en = n.innerHTML; });
+    const btn = document.getElementById("lang");
+    function setLang(l) {
+        document.documentElement.lang = l;
+        nodes.forEach(n => { n.innerHTML = l === "fr" ? n.dataset.fr : n.dataset.en; });
+        btn.textContent = l === "fr" ? "English" : "Français";
+        btn.dataset.l = l;
+    }
+    btn.onclick = () => setLang(btn.dataset.l === "fr" ? "en" : "fr");
+    let saved = "en";
+    try { saved = localStorage.getItem("fc_lang") === "fr" ? "fr" : "en"; } catch (e) {}
+    setLang(saved);
+</script>
+</body>
+</html>
