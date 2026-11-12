@@ -36,11 +36,11 @@
   /* ---------- styles ---------- */
   const css = document.createElement("style");
   css.textContent = `
-  #gamble-screen{position:fixed;top:5vh;left:5vw;width:90vw;height:90vh;z-index:1000;display:none;flex-direction:column;padding:30px;box-sizing:border-box;color:#fff;
+  #gamble-screen{position:fixed;top:0!important;bottom:0!important;left:0!important;right:0!important;margin:auto!important;width:min(90vw,1100px)!important;height:min(90vh,780px)!important;max-width:1100px!important;max-height:780px!important;z-index:1000;display:none;flex-direction:column;padding:clamp(16px,3vh,30px);box-sizing:border-box;color:#fff;
     background:rgba(10,13,20,.80);border:1px solid rgba(255,255,255,.10);border-radius:24px;backdrop-filter:blur(24px) saturate(140%);box-shadow:0 30px 80px rgba(0,0,0,.6);animation:popin .22s ease-out}
   #gamble-screen .tabs-container{width:100%}
   #gamble-screen .tab-btn{flex:1;font-size:14px;padding:12px 0}
-  #g-panel{flex:1;min-height:0;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:16px;padding:24px;box-sizing:border-box;overflow:auto;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.2) transparent;
+  #g-panel{flex:1;min-height:0;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:clamp(8px,1.6vh,16px);padding:clamp(12px,2.4vh,24px);box-sizing:border-box;overflow:auto;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.2) transparent;
     background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.10);border-radius:20px}
   #g-info{color:#8b95a8;font-size:13px;font-weight:500;text-align:center}
   #g-stage{flex:1;width:100%;display:flex;align-items:center;justify-content:center;min-height:0}
@@ -54,16 +54,16 @@
   .g-play:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 12px 30px rgba(124,92,255,.5)}
   .g-play:disabled{opacity:.4;cursor:not-allowed}
   .g-coinwrap{perspective:900px}
-  .g-coin{width:190px;height:190px;position:relative;transform-style:preserve-3d;transition:transform 1.5s cubic-bezier(.2,.7,.2,1)}
+  .g-coin{width:clamp(110px,22vh,190px)!important;height:clamp(110px,22vh,190px)!important;position:relative;transform-style:preserve-3d;transition:transform 1.5s cubic-bezier(.2,.7,.2,1)}
   .g-coin img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;backface-visibility:hidden}
   .g-coin img.b{transform:rotateY(180deg)}
-  .g-side{display:flex;gap:10px;margin-top:14px;justify-content:center}
-  .g-reels{display:flex;gap:18px}
-  .g-reel{width:150px;height:150px;border-radius:22px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10);display:flex;align-items:center;justify-content:center;box-shadow:inset 0 0 30px rgba(0,0,0,.4)}
-  .g-reel img{width:96px;height:96px;object-fit:contain}
+  .g-side{display:flex;gap:10px;margin-top:clamp(8px,1.6vh,14px);justify-content:center}
+  .g-reels{display:flex;gap:clamp(10px,2vh,18px)}
+  .g-reel{width:clamp(90px,17vh,150px)!important;height:clamp(90px,17vh,150px)!important;border-radius:22px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10);display:flex;align-items:center;justify-content:center;box-shadow:inset 0 0 30px rgba(0,0,0,.4)}
+  .g-reel img{width:64%;height:64%;object-fit:contain}
   .g-pay{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;width:100%}
   .g-pay div{display:flex;align-items:center;gap:8px;padding:5px 12px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10);font-size:13px;font-weight:600;color:#a5b4fc}
-  .g-pay img{width:30px;height:30px;object-fit:contain}
+  .g-pay img{width:26px;height:26px;object-fit:contain}
   .g-wrow{display:flex;width:100%;gap:20px;align-items:stretch;justify-content:space-between;min-height:0;height:100%}
   .g-wcol{flex:1;min-width:0;display:flex;flex-direction:column;gap:10px;padding:16px;border-radius:18px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.10)}
   .g-wcol h4{margin:0;font-size:14px;font-weight:700;text-align:center;color:#a5b4fc}
@@ -75,7 +75,29 @@
   .g-wheelwrap{position:relative;width:240px;height:240px}
   .g-wheel{width:100%;height:100%;border-radius:50%;border:4px solid rgba(255,255,255,.85);transition:transform 3.4s cubic-bezier(.12,.7,.1,1);box-shadow:0 10px 40px rgba(0,0,0,.5)}
   .g-ptr{position:absolute;left:50%;top:-16px;transform:translateX(-50%);border-left:13px solid transparent;border-right:13px solid transparent;border-top:26px solid #fff;z-index:2}
-  .g-stake{display:flex;flex-direction:column;align-items:center;gap:10px;width:100%}.g-pct{font-size:24px;font-weight:800}.g-hint{margin:auto;color:#8b95a8;text-align:center;font-size:13px}`;
+  .g-stake{display:flex;flex-direction:column;align-items:center;gap:10px;width:100%}.g-pct{font-size:24px;font-weight:800}.g-hint{margin:auto;color:#8b95a8;text-align:center;font-size:13px}
+  #g-stage{flex:1 0 auto}
+  @media (max-height:720px){
+    #gamble-screen{height:min(94vh,780px)!important;padding:14px!important}
+    #gamble-screen .screen-header{margin-bottom:8px;padding-bottom:8px}
+    #gamble-screen .tabs-container{margin-bottom:10px}
+    #gamble-screen .tab-btn{padding:8px 0;font-size:13px}
+    #g-panel{padding:12px;gap:8px}
+    #g-info{display:none}
+    #g-result{min-height:20px;font-size:16px}
+    .g-coin{width:clamp(80px,24vh,160px)!important;height:clamp(80px,24vh,160px)!important}
+    .g-reel{width:clamp(70px,20vh,120px)!important;height:clamp(70px,20vh,120px)!important}
+    .g-reels{gap:10px}.g-pay{gap:6px}.g-pay div{padding:3px 8px;font-size:12px}.g-pay img{width:20px;height:20px}
+    .g-stake{gap:8px}.g-mini{padding:6px 12px}.g-play{padding:10px 44px;font-size:15px}.g-bar input{padding:8px}
+    .g-wheelwrap{width:170px;height:170px}.g-wmid{width:220px;gap:8px}.g-pct{font-size:20px}
+  }
+  @media (max-height:720px) and (min-width:800px){
+    #g-panel.gcs{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr auto auto;align-items:center;justify-items:center;column-gap:24px}
+    #g-panel.gcs #g-stage{grid-column:1;grid-row:1;flex:none}
+    #g-panel.gcs .g-pay{grid-column:1;grid-row:2}
+    #g-panel.gcs #g-result{grid-column:1;grid-row:3}
+    #g-panel.gcs #g-stake{grid-column:2;grid-row:1 / span 3;align-self:center}
+  }`;
   document.head.appendChild(css);
 
   /* ---------- structure (même en-tête que l'inventaire) ---------- */
@@ -106,7 +128,7 @@
     const body = B.kind === "money"
       ? `<div class="g-bar"><span>${t("bet")}</span><input id="g-bet" type="number" min="1" step="1" value="${B.bet}"><button class="g-mini" data-b="min">Min</button><button class="g-mini" data-b="half">½</button><button class="g-mini" data-b="x2">x2</button><button class="g-mini" data-b="max">Max</button></div>`
       : (!owned.length ? `<div class="g-hint">${wt("noOwn")}</div>`
-        : `<div class="g-agrid" id="g-sa" style="flex:none;width:100%;max-height:118px">${owned.map(k => `<div class="g-acard ${B.apple === k ? "on" : ""}" data-k="${k}"><img src="${IMG_FRUITS[k]}"><div>${aname(k)}</div><b>x${own(k)}</b></div>`).join("")}</div>
+        : `<div class="g-agrid" id="g-sa" style="flex:none;width:100%;max-height:clamp(70px,12vh,118px)">${owned.map(k => `<div class="g-acard ${B.apple === k ? "on" : ""}" data-k="${k}"><img src="${IMG_FRUITS[k]}"><div>${aname(k)}</div><b>x${own(k)}</b></div>`).join("")}</div>
            <div class="g-bar"><span>${wt("qty")}</span><button class="g-mini" data-q="-1">-1</button><input id="g-sqty" type="number" min="1" value="${B.qty}" style="width:90px"><button class="g-mini" data-q="1">+1</button><button class="g-mini" data-q="max">Max</button></div>`);
     return `${mode}${body}<div id="g-feetxt" style="font-size:14px;color:#8b95a8"></div><button class="g-play" id="g-play">${t("play")}</button>`;
   }
@@ -129,7 +151,7 @@
   }
 
   function render() {
-    head(); const p = $("g-panel");
+    head(); const p = $("g-panel"); p.classList.toggle("gcs", game !== "wheel");
     if (game === "coin") {
       p.innerHTML = `<div id="g-info">${t("coinInfo")}</div><div id="g-stage"><div><div class="g-coinwrap"><div class="g-coin" id="g-coinel"><img src="${HEADS}"><img class="b" src="${TAILS}"></div></div>
         <div class="g-side"><button class="g-mini ${side === "heads" ? "on" : ""}" data-s="heads">${t("heads")}</button><button class="g-mini ${side === "tails" ? "on" : ""}" data-s="tails">${t("tails")}</button></div></div></div>

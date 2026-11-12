@@ -473,6 +473,7 @@ body {
             <div class="modes-container">
                 <div class="mode-card" onclick="startAdventure()"><span class="mc-text">Adventure<br>Mode</span><img class="mc-ico" src="icons/Adventure%20Mode%20Compass%20Dark%20Mode.png" alt=""></div>
                 <div class="mode-card" onclick="startGame()"><span class="mc-text">Arcade<br>Mode</span><img class="mc-ico" src="icons/Arcade%20Mode%20Timer%20Dark%20Mode.png" alt=""></div>
+                <div class="mode-card" onclick="startStory()"><span class="mc-text">Story<br>Mode</span><img class="mc-ico" src="icons/Story%20Mode%20Dark%20Mode.png" alt=""></div>
             </div>
         </div>
     </div>
@@ -936,10 +937,10 @@ body {
             if (type === 'red' || type === 'green') return { name:'Common', cls:'rarity-common' };
             if (type === 'golden' || type === 'diamond') return { name:'Rare', cls:'rarity-rare' };
             if (['candy','lava','galaxy','dark'].includes(type)) return { name:'Epic', cls:'rarity-epic' };
-            if (['cheezy','sand','skull','poisoned','frostfire','moony'].includes(type)) return { name:'Godly Apple', cls:'rarity-godly' };
+            if (['cheezy','sand','skull','poisoned','frostfire','moony','cotton','chocolate'].includes(type)) return { name:'Godly Apple', cls:'rarity-godly' };
             if (['amethyst','ice','sapphire','rainbow','canneloni','elixir','corrupted','ghost','pumpkini','sun','bloodmoon'].includes(type)) return { name:'Secret', cls:'rarity-secret' };
-            if (['cotton','chocolate','pastel','redstone','glass','ruby'].includes(type)) return { name:'Crafted', cls:'rarity-secret' };
-            if (type === 'tenth') return { name:'10th Update', cls:'rarity-godly' };
+            if (['pastel','redstone','glass','ruby'].includes(type)) return { name:'Secret', cls:'rarity-secret' };
+            if (type === 'tenth') return { name:'Admin', cls:'rarity-admin' };
             if (type === 'salhini') return { name:'Admin', cls:'rarity-admin' };
             return null;
         }
@@ -948,7 +949,7 @@ body {
             const grid = document.getElementById("index-grid"); grid.innerHTML = "";
             const activeData = accounts[currentAccountName] || {};
             const idxPrice = t => NEW_APPLES[t] ? NEW_APPLES[t].price : ({ red: 1, green: 3, golden: 7, diamond: 15, candy: 50, lava: 200, galaxy: 500, dark: 1000, moony: 50000, bloodmoon: 6666666 })[t];
-            APPLE_ORDER.filter(type => type !== 'salhini').forEach(type => {
+            APPLE_ORDER.filter(type => type !== 'salhini' && (type !== 'tenth' || (activeData.discovered && activeData.discovered[type]) || activeData[APPLE_FIELDS[type]] > 0)).forEach(type => {
                 const discovered = (activeData.discovered && activeData.discovered[type]) || (activeData[APPLE_FIELDS[type]] > 0);
                 const rarity = appleRarity(type);
                 const card = document.createElement("div"); card.className = "index-item-card";
@@ -1120,7 +1121,7 @@ body {
         resize(); updateDvdApple(); loadAllAccounts();
 
         function leaveGame() {
-            setMode('menu');
+            setMode('menu'); if (window.storyStop) window.storyStop();
             gameActive = false; if (gameSpawnInterval) { clearInterval(gameSpawnInterval); gameSpawnInterval = null; }
             apples = []; ball.speed = ball.baseSpeed; luckMultiplier = 1; setSpawnPanel(false); if (currentGameMode === "adventure") { saveAllAccounts(); }
             document.getElementById("home-screen").style.display = "flex";
@@ -1162,6 +1163,7 @@ body {
         channel.unsubscribe();
         channel.subscribe((msg) => {
             const d = msg.data; if (!gameActive) return;
+            if (currentGameMode === "story" && msg.name !== 'reset') return;
             if (msg.name === 'advRefresh') { if (window.advPoll) window.advPoll(); return; }
             // en Adventure, chance / apparitions / points sont gérés par le serveur : ces événements n'ont plus d'effet ici
             if (currentGameMode === "adventure" && ['luck','customLuck','customSpawn','greentime','doublepoints','spawn','spawnGolden','spawnDiamond','spawnCandy','clearLuck'].includes(msg.name)) return;
@@ -1353,6 +1355,7 @@ body {
                         // le serveur crédite la pomme à la prochaine synchro ; ici on affiche seulement le gain (accounts-database.js)
                         if (window.advCollect) window.advCollect(a);
                     }
+                    else if (currentGameMode === "story") { if (window.storyCollect) window.storyCollect(a); }
 
                     return false;
                 }
@@ -1381,6 +1384,7 @@ body {
                 ctx.restore();
                 return true;
             });
+            if (currentGameMode === "story" && window.storyFrame) window.storyFrame(ctx);
             requestAnimationFrame(update);
         }
 
@@ -1397,6 +1401,7 @@ body {
     </script>
 <script src="i18n.js"></script>
 <script src="mobile.js"></script>
+<script src="story-mode.js"></script>
 <script type="module" src="accounts-database.js"></script>
 </body>
 </html>
